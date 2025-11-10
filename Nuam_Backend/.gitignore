@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static
+
+# Migrations (opcional - descomenta si no quieres subir migraciones)
+# */migrations/*.py
+# */migrations/*.pyc
+# !*/migrations/__init__.py
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Credentials
+Credencialposgre.txt
+*.key
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (si hay node_modules en el backend)
+node_modules/
+package-lock.json
+
