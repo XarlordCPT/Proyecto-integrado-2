@@ -1,78 +1,219 @@
 import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { initialCalificaciones } from "../data/calificaciones";
 import UserIcon from "../components/UserIcon";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import calificacionesService from "../services/calificacionesService";
+import authService from "../services/authService";
+import { API_BASE_URL } from "../config/api";
 
-// MODALES
 import Ingresar from "../components/Ingresar";
 import IngresarMontos from "../components/IngresarMontos";
 import IngresarFactores from "../components/IngresarFactores";
+import ModificarCalificacion from "../components/ModificarCalificacion";
 import Cargar from "../components/Cargar";
 
 export default function Mantenedor() {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     ejercicio: "",
     instrumento: "",
-    fechaPago: "",
+    fecha_pago: "",
     descripcion: "",
     mercado: "",
-    origen: "",
-    periodo: "",
+    tipo_agregacion: "",
+    secuencia_de_evento: "",
   });
 
   const [selectedRow, setSelectedRow] = useState(null);
+  const [datosPrimerPaso, setDatosPrimerPaso] = useState(null);
 
-  // Modales (idénticos a tu versión)
   const [showModal, setShowModal] = useState(false);
   const [showModalMontos, setShowModalMontos] = useState(false);
   const [showModalFactores, setShowModalFactores] = useState(false);
+  const [showModalModificar, setShowModalModificar] = useState(false);
   const [showModalCarga, setShowModalCarga] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [isOpeningAdmin, setIsOpeningAdmin] = useState(false);
 
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("calificaciones");
-    if (stored) {
-      setData(JSON.parse(stored));
-    } else {
-      localStorage.setItem("calificaciones", JSON.stringify(initialCalificaciones));
-      setData(initialCalificaciones);
+  const transformCalificacionData = (apiData) => {
+    const factoresObj = {};
+    if (apiData.factores && Array.isArray(apiData.factores)) {
+      apiData.factores.forEach((factor) => {
+        const factorNum = factor.numero_factor.replace('Factor_', '');
+        factoresObj[`factor${factorNum}`] = parseFloat(factor.valor);
+      });
     }
-  }, []);
 
-  // agregar / modificar / eliminar registros (igual a tu lógica)
-  const handleAgregar = (nuevo) => {
-    const registro = {
-      id: nuevo.id ?? data.length + 1,
-      ejercicio: nuevo.año || nuevo.ejercicio || 2025,
-      instrumento: nuevo.instrumento || "Nuevo Registro Tributario",
-      fechaPago: nuevo.fechaPago || "2025-11-09",
-      descripcion: nuevo.descripcion || "Registro añadido desde el mantenedor.",
-      mercado: nuevo.mercado || "Primario",
-      origen: nuevo.origen || "Nacional",
-      periodo: nuevo.periodo || "Trimestre 1",
-      secuencia: nuevo.secuencia || "SEQ-" + (2000 + data.length),
-      ...Object.fromEntries(
-        Array.from({ length: 30 }, (_, j) => [
-          `factor${j + 8}`,
-          nuevo[`factor${j + 8}`] || (Math.random() * 1.8 + 0.2).toFixed(2),
-        ])
-      ),
+    const instrumentoId = apiData.instrumento_info?.id_instrumento || apiData.instrumento || null;
+    const ejercicioId = apiData.ejercicio || null;
+    const tipoAgregacionId = apiData.tipo_agregacion || null;
+
+    return {
+      id: apiData.id_calificacion,
+      id_calificacion: apiData.id_calificacion,
+      ejercicio: apiData.ejercicio_info || '',
+      ejercicio_id: ejercicioId,
+      ejercicio_info: apiData.ejercicio_info || '',
+      instrumento: apiData.instrumento_info?.nombre_instrumento || '',
+      instrumento_id: instrumentoId,
+      mercado: apiData.instrumento_info?.mercado || '',
+      tipo_agregacion: apiData.tipo_agregacion_info || '',
+      tipo_agregacion_id: tipoAgregacionId,
+      tipo_agregacion_info: apiData.tipo_agregacion_info || '',
+      fecha_pago: apiData.fecha_pago || '',
+      descripcion: apiData.descripcion || '',
+      secuencia_de_evento: apiData.secuencia_de_evento || '',
+      dividendo: apiData.dividendo || 0,
+      valor_historico: apiData.valor_historico || 0,
+      año: apiData.año || '',
+      isfut: apiData.isfut || false,
+      factor_actualizacion: apiData.factor_actualizacion || 0,
+      usuario: apiData.usuario || '',
+      ...factoresObj,
+    };
+  };
+
+  useEffect(() => {
+    const loadCalificaciones = async () => {
+      try {
+        setLoading(true);
+        const calificaciones = await calificacionesService.getCalificaciones();
+        const transformedData = calificaciones.map(transformCalificacionData);
+        setData(transformedData);
+      } catch (error) {
+        console.error('Error al cargar calificaciones:', error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Edición si hay fila seleccionada
-    if (selectedRow) {
-      const updated = data.map((r) => (r.id === selectedRow.id ? registro : r));
-      setData(updated);
-      localStorage.setItem("calificaciones", JSON.stringify(updated));
+    loadCalificaciones();
+  }, []);
+
+  const reloadCalificaciones = async () => {
+    try {
+      setLoading(true);
+      const calificaciones = await calificacionesService.getCalificaciones();
+      const transformedData = calificaciones.map(transformCalificacionData);
+      setData(transformedData);
+    } catch (error) {
+      console.error('Error al recargar calificaciones:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const transformarDatosParaAPI = (datosFormulario) => {
+    const factores = [];
+    for (let i = 8; i <= 37; i++) {
+      const factorKey = `factor${i}`;
+      const valor = datosFormulario.factores?.[factorKey];
+      const valorNumerico = valor !== undefined && valor !== null && valor !== "" 
+        ? parseFloat(valor) 
+        : 0;
+      factores.push({
+        numero_factor: `Factor_${i}`,
+        valor: valorNumerico,
+      });
+    }
+
+    return {
+      tipo_agregacion: parseInt(datosFormulario.tipo_agregacion_id),
+      ejercicio: parseInt(datosFormulario.ejercicio_id),
+      instrumento: parseInt(datosFormulario.instrumento_id),
+      secuencia_de_evento: parseInt(datosFormulario.secuencia),
+      dividendo: parseFloat(datosFormulario.dividendo || 0),
+      valor_historico: parseFloat(datosFormulario.valorHistorico),
+      fecha_pago: datosFormulario.fechaPago,
+      año: parseInt(datosFormulario.año),
+      descripcion: datosFormulario.descripcion || "",
+      isfut: datosFormulario.isfut || false,
+      factor_actualizacion: parseFloat(datosFormulario.factorActualizacion || 0),
+      factores: factores,
+    };
+  };
+
+  const handleAgregar = async (datosFormulario) => {
+    try {
+      setLoading(true);
+      const datosAPI = transformarDatosParaAPI(datosFormulario);
+      
+      // Validar que tenemos todos los datos necesarios
+      if (!datosAPI.tipo_agregacion || !datosAPI.ejercicio || !datosAPI.instrumento) {
+        alert("Error: Faltan datos obligatorios. Por favor, completa todos los campos.");
+        setLoading(false);
+        return;
+      }
+
+      if (datosAPI.factores.length !== 30) {
+        alert("Error: Debes ingresar los 30 factores (del 8 al 37).");
+        setLoading(false);
+        return;
+      }
+
+      await calificacionesService.createCalificacion(datosAPI);
+      
+      await reloadCalificaciones();
+      
+      setShowModalFactores(false);
+      setShowModalMontos(false);
+      setShowModal(false);
+      setShowModalModificar(false);
+      setDatosPrimerPaso(null);
       setSelectedRow(null);
-    } else {
-      const updated = [...data, registro];
-      setData(updated);
-      localStorage.setItem("calificaciones", JSON.stringify(updated));
+      
+      alert("Calificación creada exitosamente");
+    } catch (error) {
+      console.error('Error al guardar calificación:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      alert(`Error al guardar la calificación: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleModificar = async (datosFormulario) => {
+    if (!selectedRow) {
+      alert("Error: No hay una calificación seleccionada para modificar.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const datosAPI = transformarDatosParaAPI(datosFormulario);
+      
+      if (!datosAPI.tipo_agregacion || !datosAPI.ejercicio || !datosAPI.instrumento) {
+        alert("Error: Faltan datos obligatorios. Por favor, completa todos los campos.");
+        setLoading(false);
+        return;
+      }
+
+      if (datosAPI.factores.length !== 30) {
+        alert("Error: Debes ingresar los 30 factores (del 8 al 37).");
+        setLoading(false);
+        return;
+      }
+
+      await calificacionesService.updateCalificacion(selectedRow.id_calificacion, datosAPI);
+      
+      await reloadCalificaciones();
+      
+      setShowModalModificar(false);
+      setSelectedRow(null);
+      
+      alert("Calificación actualizada exitosamente");
+    } catch (error) {
+      console.error('Error al actualizar calificación:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      alert(`Error al actualizar la calificación: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,48 +222,222 @@ export default function Mantenedor() {
     setShowConfirmDelete(true);
   };
 
-  const confirmarEliminar = () => {
-    const updated = data.filter((r) => r.id !== selectedRow.id);
-    setData(updated);
-    localStorage.setItem("calificaciones", JSON.stringify(updated));
-    setSelectedRow(null);
-    setShowConfirmDelete(false);
+  const confirmarEliminar = async () => {
+    if (!selectedRow) return;
+    
+    try {
+      setLoading(true);
+      await calificacionesService.deleteCalificacion(selectedRow.id_calificacion);
+      
+      await reloadCalificaciones();
+      
+      setShowConfirmDelete(false);
+      setSelectedRow(null);
+      
+      alert("Calificación eliminada exitosamente");
+    } catch (error) {
+      console.error('Error al eliminar calificación:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      alert(`Error al eliminar la calificación: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    console.log("CERRAR SESIÓN → usuario desconectado");
+    logout();
     navigate("/login");
+  };
+
+  const handleAdminRedirect = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isOpeningAdmin) {
+      return;
+    }
+
+    try {
+      setIsOpeningAdmin(true);
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('No hay sesión activa. Por favor, inicia sesión nuevamente.');
+        setIsOpeningAdmin(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin-login-token/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          try {
+            await authService.refreshAccessToken();
+            const retryResponse = await fetch(`${API_BASE_URL}/api/auth/admin-login-token/`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            if (!retryResponse.ok) {
+              const errorData = await retryResponse.json().catch(() => ({}));
+              alert(`Error: ${errorData.detail || 'No se pudo obtener acceso al administrador'}`);
+              setIsOpeningAdmin(false);
+              return;
+            }
+            const data = await retryResponse.json();
+            const adminLoginUrl = `${API_BASE_URL}${data.admin_login_url}`;
+            const newWindow = window.open(adminLoginUrl, '_blank', 'noopener,noreferrer');
+            if (!newWindow) {
+              alert('Por favor, permite las ventanas emergentes para acceder al administrador.');
+            }
+            setIsOpeningAdmin(false);
+            return;
+          } catch (refreshError) {
+            alert('La sesión ha expirado. Por favor, inicia sesión nuevamente.');
+            setIsOpeningAdmin(false);
+            return;
+          }
+        }
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Error: ${errorData.detail || 'No se pudo obtener acceso al administrador'}`);
+        setIsOpeningAdmin(false);
+        return;
+      }
+
+      const data = await response.json();
+      const adminLoginUrl = `${API_BASE_URL}${data.admin_login_url}`;
+      
+      const newWindow = window.open(adminLoginUrl, '_blank', 'noopener,noreferrer');
+      
+      if (!newWindow) {
+        alert('Por favor, permite las ventanas emergentes para acceder al administrador.');
+      }
+      
+      setTimeout(() => {
+        setIsOpeningAdmin(false);
+      }, 500);
+    } catch (error) {
+      console.error('Error al redirigir al administrador:', error);
+      alert('Error al intentar acceder al administrador. Por favor, intenta nuevamente.');
+      setIsOpeningAdmin(false);
+    }
   };
 
   const handleClearFilters = () => {
     setFilters({
       ejercicio: "",
       instrumento: "",
-      fechaPago: "",
+      fecha_pago: "",
       descripcion: "",
       mercado: "",
-      origen: "",
-      periodo: "",
+      tipo_agregacion: "",
+      secuencia_de_evento: "",
     });
   };
 
   const filteredData = data.filter((item) =>
     Object.entries(filters).every(([key, value]) => {
       if (!value) return true;
-      return item[key]?.toString().toLowerCase().includes(value.toLowerCase());
+      const itemValue = item[key];
+      if (itemValue === null || itemValue === undefined) return false;
+      return itemValue.toString().toLowerCase().includes(value.toLowerCase());
     })
   );
 
   const columns = [
-    { name: "Ejercicio", selector: (row) => row.ejercicio, width: "100px" },
-    { name: "Instrumento", selector: (row) => row.instrumento, width: "150px" },
-    { name: "Fecha Pago", selector: (row) => row.fechaPago, width: "130px" },
-    { name: "Descripción", selector: (row) => row.descripcion, width: "220px" },
-    { name: "Secuencia", selector: (row) => row.secuencia, width: "120px" },
-    ...Array.from({ length: 30 }, (_, i) => ({
-      name: `Factor-${i + 8}`,
-      selector: (row) => row[`factor${i + 8}`],
+    { 
+      name: "ID", 
+      selector: (row) => row.id_calificacion, 
+      width: "80px",
+      sortable: true 
+    },
+    { 
+      name: "Ejercicio", 
+      selector: (row) => row.ejercicio, 
+      width: "100px",
+      sortable: true 
+    },
+    { 
+      name: "Tipo Agregación", 
+      selector: (row) => row.tipo_agregacion, 
+      width: "140px",
+      sortable: true 
+    },
+    { 
+      name: "Mercado", 
+      selector: (row) => row.mercado, 
+      width: "120px",
+      sortable: true 
+    },
+    { 
+      name: "Instrumento", 
+      selector: (row) => row.instrumento, 
+      width: "150px",
+      sortable: true 
+    },
+    { 
+      name: "Fecha Pago", 
+      selector: (row) => row.fecha_pago, 
+      width: "130px",
+      sortable: true 
+    },
+    { 
+      name: "Año", 
+      selector: (row) => row.año, 
+      width: "80px",
+      sortable: true 
+    },
+    { 
+      name: "Secuencia", 
+      selector: (row) => row.secuencia_de_evento, 
+      width: "100px",
+      sortable: true 
+    },
+    { 
+      name: "Dividendo", 
+      selector: (row) => parseFloat(row.dividendo || 0).toFixed(2), 
       width: "110px",
+      sortable: true 
+    },
+    { 
+      name: "Valor Histórico", 
+      selector: (row) => parseFloat(row.valor_historico || 0).toFixed(2), 
+      width: "130px",
+      sortable: true 
+    },
+    { 
+      name: "Factor Actualización", 
+      selector: (row) => parseFloat(row.factor_actualizacion || 0).toFixed(4), 
+      width: "150px",
+      sortable: true 
+    },
+    { 
+      name: "ISFUT", 
+      selector: (row) => row.isfut ? "Sí" : "No", 
+      width: "80px",
+      sortable: true 
+    },
+    { 
+      name: "Descripción", 
+      selector: (row) => row.descripcion, 
+      width: "220px",
+      wrap: true 
+    },
+    ...Array.from({ length: 30 }, (_, i) => ({
+      name: `Factor ${i + 8}`,
+      selector: (row) => {
+        const factorValue = row[`factor${i + 8}`];
+        return factorValue !== undefined ? parseFloat(factorValue).toFixed(4) : '-';
+      },
+      width: "100px",
+      sortable: true
     })),
   ];
 
@@ -147,11 +462,20 @@ export default function Mantenedor() {
 
   return (
     <div className="min-h-screen bg-[var(--fondo)] flex flex-col">
-      {/* Header */}
       <div className="bg-[#323232] p-4 flex justify-between items-center text-white">
         <h1 className="font-bold text-lg">Mantenedor de Calificaciones Tributarias</h1>
         <div className="flex items-center gap-2">
           <UserIcon className="h-6 w-6 text-[var(--nar)]" />
+          {user?.rol && user.rol.toLowerCase() === "administrador" && (
+            <button
+              type="button"
+              onClick={handleAdminRedirect}
+              disabled={isOpeningAdmin}
+              className="bg-blue-600 text-white px-3 py-1 rounded font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isOpeningAdmin ? 'Abriendo...' : 'Administrador'}
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="bg-[var(--nar)] text-black px-3 py-1 rounded font-semibold hover:opacity-90"
@@ -162,47 +486,69 @@ export default function Mantenedor() {
       </div>
 
       <div className="flex flex-1 p-6 gap-6">
-        {/* Panel lateral (mismos espacios que tenías) */}
         <aside className="w-[220px] bg-white p-4 rounded-lg shadow-md flex flex-col gap-3">
+          <label className="text-sm font-semibold">Ejercicio:</label>
+          <input
+            type="text"
+            value={filters.ejercicio}
+            onChange={(e) => setFilters({ ...filters, ejercicio: e.target.value })}
+            placeholder="Filtrar por ejercicio"
+            className="border p-1 rounded text-sm"
+          />
+
           <label className="text-sm font-semibold">Mercado:</label>
-          <select
+          <input
+            type="text"
             value={filters.mercado}
             onChange={(e) => setFilters({ ...filters, mercado: e.target.value })}
+            placeholder="Filtrar por mercado"
             className="border p-1 rounded text-sm"
-          >
-            <option value="">Seleccionar</option>
-            <option value="Primario">Primario</option>
-            <option value="Secundario">Secundario</option>
-          </select>
+          />
 
-          <label className="text-sm font-semibold">Origen:</label>
-          <select
-            value={filters.origen}
-            onChange={(e) => setFilters({ ...filters, origen: e.target.value })}
+          <label className="text-sm font-semibold">Tipo Agregación:</label>
+          <input
+            type="text"
+            value={filters.tipo_agregacion}
+            onChange={(e) => setFilters({ ...filters, tipo_agregacion: e.target.value })}
+            placeholder="Filtrar por tipo"
             className="border p-1 rounded text-sm"
-          >
-            <option value="">Seleccionar</option>
-            <option value="Nacional">Nacional</option>
-            <option value="Internacional">Internacional</option>
-          </select>
+          />
 
-          <label className="text-sm font-semibold">Periodo:</label>
-          <select
-            value={filters.periodo}
-            onChange={(e) => setFilters({ ...filters, periodo: e.target.value })}
+          <label className="text-sm font-semibold">Instrumento:</label>
+          <input
+            type="text"
+            value={filters.instrumento}
+            onChange={(e) => setFilters({ ...filters, instrumento: e.target.value })}
+            placeholder="Filtrar por instrumento"
             className="border p-1 rounded text-sm"
-          >
-            <option value="">Seleccionar</option>
-            <option value="Trimestre 1">Trimestre 1</option>
-            <option value="Trimestre 2">Trimestre 2</option>
-            <option value="Trimestre 3">Trimestre 3</option>
-            <option value="Trimestre 4">Trimestre 4</option>
-          </select>
+          />
 
-          <section className="p-2"></section>
-          <button className="bg-[var(--nar)] text-white rounded py-1 text-sm mt-2 hover:opacity-90">
-            Buscar
-          </button>
+          <label className="text-sm font-semibold">Fecha Pago:</label>
+          <input
+            type="text"
+            value={filters.fecha_pago}
+            onChange={(e) => setFilters({ ...filters, fecha_pago: e.target.value })}
+            placeholder="Filtrar por fecha"
+            className="border p-1 rounded text-sm"
+          />
+
+          <label className="text-sm font-semibold">Secuencia:</label>
+          <input
+            type="text"
+            value={filters.secuencia_de_evento}
+            onChange={(e) => setFilters({ ...filters, secuencia_de_evento: e.target.value })}
+            placeholder="Filtrar por secuencia"
+            className="border p-1 rounded text-sm"
+          />
+
+          <label className="text-sm font-semibold">Descripción:</label>
+          <input
+            type="text"
+            value={filters.descripcion}
+            onChange={(e) => setFilters({ ...filters, descripcion: e.target.value })}
+            placeholder="Filtrar por descripción"
+            className="border p-1 rounded text-sm"
+          />
 
           <section className="p-2"></section>
           <button
@@ -229,17 +575,21 @@ export default function Mantenedor() {
           </button>
 
           <section className="p-7"></section>
-          <button
-            onClick={() => selectedRow && setShowModalMontos(true)}
-            disabled={!selectedRow}
-            className={`border rounded py-1 text-sm ${
-              selectedRow
-                ? "bg-white text-black hover:bg-gray-100"
-                : "bg-gray-200 text-gray-500 cursor-not-allowed opacity-50"
-            }`}
-          >
-            Modificar
-          </button>
+                <button
+                  onClick={() => {
+                    if (selectedRow) {
+                      setShowModalModificar(true);
+                    }
+                  }}
+                  disabled={!selectedRow}
+                  className={`border rounded py-1 text-sm ${
+                    selectedRow
+                      ? "bg-white text-black hover:bg-gray-100"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  Modificar
+                </button>
 
           <section className="p-2"></section>
           <button
@@ -255,35 +605,48 @@ export default function Mantenedor() {
           </button>
         </aside>
 
-        {/* Tabla */}
         <main className="flex-1 bg-white rounded-lg shadow-md p-3 overflow-x-auto">
-          <DataTable
-            columns={columns}
-            data={filteredData}
-            customStyles={customStyles}
-            dense
-            highlightOnHover
-            selectableRows
-            selectableRowsSingle
-            onSelectedRowsChange={(state) => {
-              setSelectedRow(state.selectedRows[0] || null);
-            }}
-            fixedHeader
-            fixedHeaderScrollHeight="calc(100vh - 250px)"
-          />
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--nar)] mx-auto"></div>
+                <p className="mt-4 text-gray-600">Cargando calificaciones...</p>
+              </div>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={filteredData}
+              customStyles={customStyles}
+              dense
+              highlightOnHover
+              selectableRows
+              selectableRowsSingle
+              onSelectedRowsChange={(state) => {
+                setSelectedRow(state.selectedRows[0] || null);
+              }}
+              fixedHeader
+              fixedHeaderScrollHeight="calc(100vh - 250px)"
+              noDataComponent="No hay calificaciones registradas"
+              progressPending={loading}
+            />
+          )}
         </main>
       </div>
 
-      {/* MODALES (idénticos a tu wiring original) */}
       {showModal && (
         <Ingresar
-          onClose={() => setShowModal(false)}
-          onSubmit={handleAgregar}
-          onMontos={() => {
+          onClose={() => {
+            setShowModal(false);
+            setDatosPrimerPaso(null);
+          }}
+          onMontos={(datos) => {
+            setDatosPrimerPaso(datos);
             setShowModal(false);
             setShowModalMontos(true);
           }}
-          onFactores={() => {
+          onFactores={(datos) => {
+            setDatosPrimerPaso(datos);
             setShowModal(false);
             setShowModalFactores(true);
           }}
@@ -292,32 +655,46 @@ export default function Mantenedor() {
 
       {showModalMontos && (
         <IngresarMontos
-          onClose={() => setShowModalMontos(false)}
+          onClose={() => {
+            setShowModalMontos(false);
+            setDatosPrimerPaso(null);
+          }}
           onSubmit={handleAgregar}
-          selectedData={selectedRow}
+          datosIniciales={datosPrimerPaso || {}}
         />
       )}
 
       {showModalFactores && (
         <IngresarFactores
-          onClose={() => setShowModalFactores(false)}
+          onClose={() => {
+            setShowModalFactores(false);
+            setDatosPrimerPaso(null);
+          }}
           onSubmit={handleAgregar}
+          datosIniciales={datosPrimerPaso || {}}
+        />
+      )}
+
+      {showModalModificar && selectedRow && (
+        <ModificarCalificacion
+          onClose={() => {
+            setShowModalModificar(false);
+          }}
+          onSubmit={handleModificar}
+          calificacionData={selectedRow}
         />
       )}
 
       {showModalCarga && (
         <Cargar
           onClose={() => setShowModalCarga(false)}
-          onSubmit={(nuevos) => {
-            const updated = [...data, ...nuevos];
-            setData(updated);
-            localStorage.setItem("calificaciones", JSON.stringify(updated));
+          onSubmit={async (nuevos) => {
+            await reloadCalificaciones();
           }}
         />
       )}
 
-      {/* CONFIRMAR ELIMINACIÓN (igual al que ya usabas) */}
-      {showConfirmDelete && (
+      {showConfirmDelete && selectedRow && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white border border-gray-300 rounded-lg shadow-xl w-[420px] p-6 text-center relative">
             <div className="flex justify-center mb-4">
@@ -327,23 +704,26 @@ export default function Mantenedor() {
             </div>
 
             <h3 className="text-red-600 font-bold text-lg mb-2">
-              ¿Eliminar registro permanentemente?
+              ¿Eliminar calificación permanentemente?
             </h3>
             <p className="text-gray-600 text-sm mb-5 px-4">
               Esta acción <span className="font-semibold text-red-500">no se puede deshacer</span>.
-              El registro seleccionado será eliminado de forma permanente del mantenedor.
+              <br />
+              La calificación <strong>ID: {selectedRow?.id_calificacion}</strong> será eliminada de forma permanente.
             </p>
 
             <div className="flex justify-center gap-4">
               <button
                 onClick={confirmarEliminar}
-                className="bg-red-500 text-white font-semibold px-6 py-2 rounded hover:bg-red-600 transition-all"
+                disabled={loading}
+                className="bg-red-500 text-white font-semibold px-6 py-2 rounded hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Eliminar
+                {loading ? "Eliminando..." : "Eliminar"}
               </button>
               <button
                 onClick={() => setShowConfirmDelete(false)}
-                className="border border-gray-400 px-6 py-2 rounded hover:bg-gray-100 transition-all"
+                disabled={loading}
+                className="border border-gray-400 px-6 py-2 rounded hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-9e$n2+jr-h5q9^hncb5)vvl3$_11g!uc71y5%!k9=*&$13&f!n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -138,22 +138,51 @@ REST_FRAMEWORK = {
     ],
 }
 
-SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('Bearer',), # React enviará "Bearer <token>"
-}
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", # El puerto estándar de React
-    "http://127.0.0.1:3000",
-]
-
-AUTH_USER_MODEL = 'core.Usuario'
-
 from datetime import timedelta
 
 SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',), # React enviará "Bearer <token>"
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000", # El puerto estándar de React
+    "http://127.0.0.1:3000",
+    "http://localhost:5173", # El puerto estándar de Vite
+    "http://127.0.0.1:5173",
+]
+
+# Configuración de CORS para permitir cookies de sesión
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Configuración de sesiones
+# Para desarrollo local, usamos 'Lax' en lugar de 'None'
+# 'None' requiere HTTPS (SESSION_COOKIE_SECURE = True)
+SESSION_COOKIE_SAMESITE = 'Lax'  # Cambiar a 'None' en producción con HTTPS
+SESSION_COOKIE_SECURE = False  # Cambiar a True en producción con HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 3600  # 1 hora en segundos
+
+# Configuración de cache (usando cache en memoria para desarrollo)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+AUTH_USER_MODEL = 'core.Usuario'

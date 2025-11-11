@@ -1,238 +1,311 @@
 import { useState, useEffect } from "react";
 
-export default function IngresarMontos({ onClose, onSubmit, selectedData }) {
-  const [form, setForm] = useState({
-    ejercicio: "",
-    instrumento: "",
-    fechaPago: "",
-    descripcion: "",
-    mercado: "",
-    origen: "",
-    periodo: "",
-    secuencia: "",
-    factores: {},
+export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} }) {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    montos: Object.fromEntries(
+      Array.from({ length: 30 }, (_, i) => [`monto${i + 8}`, ""])
+    ),
+    factores: Object.fromEntries(
+      Array.from({ length: 30 }, (_, i) => [`factor${i + 8}`, ""])
+    ),
   });
 
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Precargar datos si viene algo seleccionado
   useEffect(() => {
-    if (selectedData) {
-      const prefill = {
-        id: selectedData.id,
-        ejercicio: selectedData.ejercicio,
-        instrumento: selectedData.instrumento,
-        fechaPago: selectedData.fechaPago,
-        descripcion: selectedData.descripcion,
-        mercado: selectedData.mercado,
-        origen: selectedData.origen,
-        periodo: selectedData.periodo,
-        secuencia: selectedData.secuencia,
-        factores: {}, // Inicializamos vacío para los factores
-      };
-
-      // Cargar factores
-      for (let i = 8; i <= 37; i++) {
-        prefill.factores[`factor${i}`] = selectedData[`factor${i}`] || "";
-      }
-
-      setForm(prefill);
+    if (datosIniciales && Object.keys(datosIniciales).length > 0) {
+      setFormData((prev) => ({
+        ...datosIniciales,
+        montos: prev.montos || Object.fromEntries(
+          Array.from({ length: 30 }, (_, i) => [`monto${i + 8}`, ""])
+        ),
+        factores: prev.factores || Object.fromEntries(
+          Array.from({ length: 30 }, (_, i) => [`factor${i + 8}`, ""])
+        ),
+      }));
     }
-  }, [selectedData]);
+  }, [datosIniciales]);
 
-  // ✅ Manejo de cambios en los campos
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleFactorChange = (i, val) => {
-    setForm((f) => ({
-      ...f,
-      factores: { ...f.factores, [`factor${i}`]: val },
+  const handleMontoChange = (e, key) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      montos: { ...prev.montos, [key]: value },
     }));
   };
 
-  // ✅ Cálculo de factores (simplemente genera números aleatorios por ahora)
-  const recalcularFactores = () => {
-    const nuevos = {};
-    for (let i = 8; i <= 37; i++) {
-      nuevos[`factor${i}`] = (Math.random() * 1.5 + 0.5).toFixed(2);
-    }
-    setForm((f) => ({ ...f, factores: nuevos }));
+  const handleFactorChange = (e, key) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      factores: { ...prev.factores, [key]: value },
+    }));
   };
 
-  const handleConfirm = () => setShowConfirm(true);
+  const validateMontos = () => {
+    const montosObligatorios = [];
+    for (let i = 8; i <= 19; i++) {
+      const montoKey = `monto${i}`;
+      const montoValue = formData.montos[montoKey];
+      if (!montoValue || montoValue === "" || parseFloat(montoValue) <= 0) {
+        montosObligatorios.push(i);
+      }
+    }
+    
+    if (montosObligatorios.length > 0) {
+      setError(`Los montos del Factor 8 al Factor 19 son obligatorios y deben ser mayor a 0. Faltan: ${montosObligatorios.join(", ")}`);
+      return false;
+    }
 
-  const confirmarGuardar = () => {
-    console.log("GUARDAR → Registro actualizado o nuevo:", form);
-    onSubmit({ ...form, ...form.factores });
-    setShowConfirm(false);
-    onClose();
+    for (let i = 20; i <= 37; i++) {
+      const montoKey = `monto${i}`;
+      const montoValue = formData.montos[montoKey];
+      if (montoValue && montoValue !== "" && parseFloat(montoValue) < 0) {
+        setError(`El monto del Factor ${i} no puede ser negativo`);
+        return false;
+      }
+    }
+
+    let sumaDenominador = 0;
+    for (let i = 8; i <= 19; i++) {
+      const montoKey = `monto${i}`;
+      const montoValue = parseFloat(formData.montos[montoKey] || 0);
+      sumaDenominador += montoValue;
+    }
+
+    if (sumaDenominador === 0) {
+      setError("La suma de los montos del Factor 8 al Factor 19 no puede ser 0");
+      return false;
+    }
+
+    setError("");
+    return true;
+  };
+
+  const calcularFactores = () => {
+    if (!validateMontos()) return;
+
+    let sumaDenominador = 0;
+    for (let i = 8; i <= 19; i++) {
+      const montoKey = `monto${i}`;
+      const montoValue = parseFloat(formData.montos[montoKey] || 0);
+      sumaDenominador += montoValue;
+    }
+
+    const factoresCalculados = {};
+    for (let i = 8; i <= 37; i++) {
+      const montoKey = `monto${i}`;
+      const factorKey = `factor${i}`;
+      const montoValue = parseFloat(formData.montos[montoKey] || 0);
+      
+      let factorValue = 0;
+      if (sumaDenominador > 0 && montoValue > 0) {
+        factorValue = montoValue / sumaDenominador;
+      }
+      
+      factoresCalculados[factorKey] = factorValue === 0 
+        ? "0" 
+        : factorValue.toFixed(8);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      factores: factoresCalculados,
+    }));
+
+    setStep(2);
+    setError("");
+  };
+
+  const validateFactores = () => {
+    const factoresInvalidos = [];
+    for (let i = 8; i <= 37; i++) {
+      const factorKey = `factor${i}`;
+      const valor = formData.factores[factorKey];
+      
+      if (valor === "" || valor === null || valor === undefined) {
+        factoresInvalidos.push(`Factor ${i} está vacío`);
+        continue;
+      }
+      
+      const numValue = parseFloat(valor);
+      if (isNaN(numValue) || numValue < 0) {
+        factoresInvalidos.push(`Factor ${i} tiene un valor inválido`);
+        continue;
+      }
+      
+      if (i >= 8 && i <= 19 && numValue === 0) {
+        factoresInvalidos.push(`Factor ${i} no puede ser 0 (el monto correspondiente es obligatorio)`);
+      }
+    }
+    
+    if (factoresInvalidos.length > 0) {
+      setError(`Errores en los factores: ${factoresInvalidos.join(", ")}`);
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleGrabar = async () => {
+    if (!validateFactores()) return;
+    
+    setLoading(true);
+    try {
+      const datosCompletos = {
+        ...datosIniciales,
+        factores: formData.factores,
+      };
+      
+      await onSubmit(datosCompletos);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      setError('Error al guardar la calificación. Por favor, intenta nuevamente.');
+      setLoading(false);
+    }
+  };
+
+  const volverAMontos = () => {
+    setStep(1);
+    setError("");
   };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-[#F4F4F4] border border-gray-300 rounded-md shadow-lg w-[900px] max-h-[90vh] overflow-y-auto relative">
-        <div className="border-b border-gray-300 bg-white px-5 py-2 flex justify-between">
+      <div className="bg-[#F4F4F4] border border-gray-300 rounded-md shadow-lg w-[900px] max-h-[90vh] overflow-y-auto">
+        <div className="border-b border-gray-300 bg-white px-5 py-2">
           <h2 className="text-[var(--nar)] font-bold text-[16.5px]">
-            {selectedData ? "Modificar Registro" : "Ingresar por Montos"}
+            {step === 1 
+              ? "Ingresar Calificación Por Montos" 
+              : "Editar Factores Calculados"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-black font-bold text-lg"
-          >
-            ×
-          </button>
         </div>
 
-        <form onSubmit={(e) => e.preventDefault()} className="p-5 space-y-5">
-          {/* Campos de texto previos */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="font-medium">Mercado:</label>
-              <input
-                name="mercado"
-                value={form.mercado}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">Instrumento:</label>
-              <input
-                name="instrumento"
-                value={form.instrumento}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">Descripción:</label>
-              <input
-                name="descripcion"
-                value={form.descripcion}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">Fecha Pago:</label>
-              <input
-                name="fechaPago"
-                type="date"
-                value={form.fechaPago}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">Secuencia:</label>
-              <input
-                name="secuencia"
-                value={form.secuencia}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">Dividendo:</label>
-              <input
-                name="dividendo"
-                value={form.dividendo}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">Valor Histórico:</label>
-              <input
-                name="valorHistorico"
-                value={form.valorHistorico}
-                onChange={handleChange}
-                className="w-full border p-1 rounded"
-                type="text"
-              />
-            </div>
-          </div>
-
-          {/* Factores */}
-          <div className="p-5">
-            <h3 className="font-semibold text-[var(--nar)] mb-2">Factores</h3>
-            <div className="grid grid-cols-6 gap-2 max-h-[250px] overflow-y-auto border p-3 rounded">
-              {Array.from({ length: 30 }, (_, i) => {
-                const n = i + 8;
-                return (
-                  <div key={n} className="flex flex-col">
-                    <label className="text-xs text-gray-600">Factor-{n}</label>
-                    <input
-                      value={form.factores[`factor${n}`] || ""}
-                      onChange={(e) => handleFactorChange(n, e.target.value)}
-                      className="border p-1 rounded text-sm"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex justify-end mt-4 gap-3">
-              <button
-                onClick={recalcularFactores}
-                className="bg-[var(--nar)] text-white font-semibold px-5 py-1.5 rounded hover:opacity-90"
-              >
-                Recalcular
-              </button>
-              <button
-                onClick={handleConfirm}
-                className="bg-[var(--nar)] text-white font-semibold px-5 py-1.5 rounded hover:opacity-90"
-              >
-                Guardar
-              </button>
-              <button
-                onClick={onClose}
-                className="border border-gray-400 px-5 py-1.5 rounded hover:bg-gray-100"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-
-          {/* Confirmación */}
-          {showConfirm && (
-            <div className="absolute inset-0 bg-black/30 flex justify-center items-center">
-              <div className="bg-[#F4F4F4] border border-gray-400 rounded-md shadow-lg px-10 py-6 text-center">
-                <h3 className="text-[var(--nar)] font-bold mb-4">
-                  ¿Desea guardar los cambios realizados?
-                </h3>
-                <div className="flex justify-center gap-4">
-                  <button
-                    onClick={confirmarGuardar}
-                    className="bg-[var(--nar)] text-white font-semibold px-5 py-1.5 rounded hover:opacity-90"
-                  >
-                    Confirmar
-                  </button>
-                  <button
-                    onClick={() => setShowConfirm(false)}
-                    className="border border-gray-400 px-5 py-1.5 rounded hover:bg-gray-100"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
+        <div className="p-6 text-[14px]">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm mb-4">
+              {error}
             </div>
           )}
-        </form>
+
+          <div className="bg-gray-50 p-4 rounded mb-4">
+            <h3 className="font-semibold mb-2">Datos de la Calificación:</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div><strong>Fecha Pago:</strong> {formData.fechaPago || "No especificada"}</div>
+              <div><strong>Secuencia:</strong> {formData.secuencia || "No especificada"}</div>
+              <div><strong>Valor Histórico:</strong> {formData.valorHistorico || "No especificado"}</div>
+              <div><strong>Año:</strong> {formData.año || "No especificado"}</div>
+              <div className="col-span-2"><strong>Descripción:</strong> {formData.descripcion || "No especificada"}</div>
+            </div>
+          </div>
+
+          {step === 1 && (
+            <>
+              <div className="mb-4">
+                <h3 className="font-semibold mb-2">Montos (8 al 37):</h3>
+                <p className="text-xs text-gray-600 mb-3">
+                  Ingresa los montos para cada factor. Los factores se calcularán automáticamente usando la fórmula:
+                  <br />
+                  <strong>Factor_N = Monto_N / (Monto_8 + Monto_9 + ... + Monto_19)</strong>
+                  <br />
+                  <span className="text-red-600 font-semibold">Nota: Los montos del Factor 8 al 19 son obligatorios y deben ser mayor a 0. Los montos del Factor 20 al 37 son opcionales.</span>
+                </p>
+                <div className="grid grid-cols-6 gap-2">
+                  {Object.keys(formData.montos).map((key, i) => {
+                    const factorNum = i + 8;
+                    const esObligatorio = factorNum >= 8 && factorNum <= 19;
+                    return (
+                      <label key={key} className="flex flex-col text-[13px]">
+                        {`Monto ${factorNum}:`}
+                        {esObligatorio && <span className="text-red-500 text-xs">*</span>}
+                        <input
+                          type="number"
+                          step="0.01"
+                          min={esObligatorio ? "0.01" : "0"}
+                          value={formData.montos[key]}
+                          onChange={(e) => handleMontoChange(e, key)}
+                          className={`border border-gray-300 rounded px-1 py-1 bg-white text-sm ${
+                            esObligatorio ? "border-red-300" : ""
+                          }`}
+                          required={esObligatorio}
+                          placeholder={esObligatorio ? "Obligatorio" : "Opcional"}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-5">
+                <button
+                  onClick={calcularFactores}
+                  className="bg-[var(--nar)] text-white font-semibold px-6 py-1.5 rounded hover:opacity-90"
+                >
+                  Calcular
+                </button>
+                <button
+                  onClick={onClose}
+                  className="border border-gray-400 px-6 py-1.5 rounded hover:bg-gray-100"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="mb-4">
+                <h3 className="font-semibold mb-2">Factores Calculados (8 al 37):</h3>
+                <p className="text-xs text-gray-600 mb-3">
+                  Los factores han sido calculados automáticamente. Puedes editarlos manualmente si es necesario antes de guardar.
+                </p>
+                <div className="grid grid-cols-6 gap-2">
+                  {Object.keys(formData.factores).map((key, i) => (
+                    <label key={key} className="flex flex-col text-[13px]">
+                      {`Factor ${i + 8}:`}
+                      <input
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        value={formData.factores[key]}
+                        onChange={(e) => handleFactorChange(e, key)}
+                        className="border border-gray-300 rounded px-1 py-1 bg-white text-sm"
+                        required
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-5">
+                <button
+                  onClick={volverAMontos}
+                  className="border border-gray-400 px-6 py-1.5 rounded hover:bg-gray-100"
+                  disabled={loading}
+                >
+                  Volver a Montos
+                </button>
+                <button
+                  onClick={handleGrabar}
+                  className="bg-[var(--nar)] text-white font-semibold px-6 py-1.5 rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {loading ? "Guardando..." : "Grabar"}
+                </button>
+                <button
+                  onClick={onClose}
+                  className="border border-gray-400 px-6 py-1.5 rounded hover:bg-gray-100"
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -63,33 +63,35 @@ class CalificacionSerializer(serializers.ModelSerializer):
             'factores'
         ]
     
-    def crearCalificacion(self, datos_validados):
-        factores_datos = datos_validados.pop('factores')
+    def create(self, validated_data):
+        factores_datos = validated_data.pop('factores', [])
         usuario = self.context['request'].user
         with transaction.atomic():
-            calificacion = Calificacion.objects.create(usuario=usuario, **datos_validados)
+            calificacion = Calificacion.objects.create(usuario=usuario, **validated_data)
             for factor_datos in factores_datos:
                 Factor.objects.create(calificacion=calificacion, **factor_datos)
         return calificacion
     
-    def actualizarCalificacion(self, instancia, datos_validados):
-        factores_datos = datos_validados.pop('factores')
+    def update(self, instance, validated_data):
+        factores_datos = validated_data.pop('factores', [])
 
-        instancia.tipo_agregacion = datos_validados.get('tipo_agregacion', instancia.tipo_agregacion)
-        instancia.ejercicio = datos_validados.get('ejercicio', instancia.ejercicio)
-        instancia.instrumento = datos_validados.get('instrumento', instancia.instrumento)
-        instancia.secuencia_de_evento = datos_validados.get('secuencia_de_evento', instancia.secuencia_de_evento)
-        instancia.dividendo = datos_validados.get('dividendo', instancia.dividendo)
-        instancia.valor_historico = datos_validados.get('valor_historico', instancia.valor_historico)
-        instancia.fecha_pago = datos_validados.get('fecha_pago', instancia.fecha_pago)
-        instancia.año = datos_validados.get('año', instancia.año)
-        instancia.descripcion = datos_validados.get('descripcion', instancia.descripcion)
-        instancia.isfut = datos_validados.get('isfut', instancia.isfut)
-        instancia.factor_actualizacion = datos_validados.get('factor_actualizacion', instancia.factor_actualizacion)
+        # Actualizar campos de la calificación
+        instance.tipo_agregacion = validated_data.get('tipo_agregacion', instance.tipo_agregacion)
+        instance.ejercicio = validated_data.get('ejercicio', instance.ejercicio)
+        instance.instrumento = validated_data.get('instrumento', instance.instrumento)
+        instance.secuencia_de_evento = validated_data.get('secuencia_de_evento', instance.secuencia_de_evento)
+        instance.dividendo = validated_data.get('dividendo', instance.dividendo)
+        instance.valor_historico = validated_data.get('valor_historico', instance.valor_historico)
+        instance.fecha_pago = validated_data.get('fecha_pago', instance.fecha_pago)
+        instance.año = validated_data.get('año', instance.año)
+        instance.descripcion = validated_data.get('descripcion', instance.descripcion)
+        instance.isfut = validated_data.get('isfut', instance.isfut)
+        instance.factor_actualizacion = validated_data.get('factor_actualizacion', instance.factor_actualizacion)
 
         with transaction.atomic():
-            instancia.save()
-            instancia.factores.all().delete()
+            instance.save()
+            # Eliminar factores existentes y crear los nuevos
+            instance.factores.all().delete()
             for factor_dato in factores_datos:
-                Factor.objects.create(calificacion=instancia, **factor_dato)
-        return instancia
+                Factor.objects.create(calificacion=instance, **factor_dato)
+        return instance

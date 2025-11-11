@@ -121,7 +121,6 @@ export default function Cargar({ onClose, onSubmit }) {
         </div>
 
         <div className="p-5">
-          {/* MODO MANUAL */}
           {modoManual ? (
             <form
               onSubmit={(e) => {
@@ -170,7 +169,6 @@ export default function Cargar({ onClose, onSubmit }) {
             </form>
           ) : (
             <>
-              {/* MODO CSV (igual que antes) */}
               {csvDataRaw.length > 0 ? (
                 <div className="overflow-x-auto mb-5">
                   <table className="w-full text-sm border border-gray-300 bg-white">
@@ -234,7 +232,6 @@ export default function Cargar({ onClose, onSubmit }) {
           )}
         </div>
 
-        {/* Confirmación */}
         {showConfirm && (
           <div className="absolute inset-0 bg-black/30 flex justify-center items-center">
             <div className="bg-[#F4F4F4] border border-gray-400 rounded-md shadow-lg px-10 py-6 text-center">

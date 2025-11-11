@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.urls import path
-from .views import MyTokenObtainPairView
+from .views import MyTokenObtainPairView, admin_login_token, admin_login_redirect
 from rest_framework_simplejwt.views import (TokenRefreshView, TokenVerifyView)
 
 urlpatterns = [
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('admin-login-token/', admin_login_token, name='admin_login_token'),
+    path('admin-login/<str:temp_token>/', admin_login_redirect, name='admin_login_redirect'),
 ]
