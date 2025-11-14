@@ -6,6 +6,7 @@ export default function Cargar({ onClose, onSubmit }) {
   const [headers, setHeaders] = useState([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [modoManual, setModoManual] = useState(false);
+  const [showEjemplo, setShowEjemplo] = useState(false);
 
   const [registroManual, setRegistroManual] = useState({
     ejercicio: "",
@@ -16,6 +17,7 @@ export default function Cargar({ onClose, onSubmit }) {
     origen: "",
     periodo: "",
     secuencia: "",
+    año: "",
   });
 
   const handleChange = (e) => {
@@ -59,18 +61,22 @@ export default function Cargar({ onClose, onSubmit }) {
         row["Descripción"] ?? row["Descripcion"] ?? row["descripcion"] ?? row["Descripción"] ?? "",
       secuencia: row["Secuencia"] ?? row["secuencia"] ?? "",
       mercado: row["Mercado"] ?? row["mercado"] ?? "",
-      origen: row["Origen"] ?? row["origen"] ?? "",
+      // NOTA: El campo "origen" no se usa en carga masiva, siempre se usa "MASIVA"
       periodo: row["Periodo"] ?? row["periodo"] ?? "",
       año: row["Año"] ?? row["Anio"] ?? row["año"] ?? row["anio"] ?? "",
+      // Campos opcionales
+      dividendo: row["Dividendo"] ?? row["dividendo"] ?? "",
+      valor_historico: row["Valor Histórico"] ?? row["Valor Historico"] ?? row["valor_historico"] ?? row["valorHistorico"] ?? "",
+      isfut: row["ISFUT"] ?? row["isfut"] ?? row["Isfut"] ?? "",
+      factor_actualizacion: row["Factor Actualización"] ?? row["Factor Actualizacion"] ?? row["factor_actualizacion"] ?? row["factorActualizacion"] ?? "",
     };
 
-    const factores = {};
+    // Extraer factores (factor8 a factor37)
     Object.keys(row).forEach((key) => {
       const m = key.trim().match(/^factor[\s\-]?(\d{2})$/i);
       if (m) {
         const num = parseInt(m[1], 10);
         if (num >= 8 && num <= 37) {
-          factores[`factor${num}`] = row[key] ?? "";
           out[`factor${num}`] = row[key] ?? "";
         }
       }
@@ -82,10 +88,11 @@ export default function Cargar({ onClose, onSubmit }) {
 
   const handleGuardar = () => {
     if (modoManual) {
+      // Generar factores vacíos (el backend los manejará con valores por defecto)
       const factores = Object.fromEntries(
         Array.from({ length: 30 }, (_, i) => [
           `factor${i + 8}`,
-          (Math.random() * 1.8 + 0.2).toFixed(2),
+          "",
         ])
       );
 
@@ -139,11 +146,12 @@ export default function Cargar({ onClose, onSubmit }) {
                   "origen",
                   "periodo",
                   "secuencia",
+                  "año",
                 ].map((campo) => (
                   <input
                     key={campo}
                     name={campo}
-                    value={registroManual[campo]}
+                    value={registroManual[campo] ?? ""}
                     onChange={handleChange}
                     className="border rounded p-2 text-sm"
                     placeholder={campo.charAt(0).toUpperCase() + campo.slice(1)}
@@ -169,6 +177,70 @@ export default function Cargar({ onClose, onSubmit }) {
             </form>
           ) : (
             <>
+              {/* Nota sobre tipo de agregación */}
+              <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded">
+                <p className="text-sm text-orange-800">
+                  <strong>Nota:</strong> Revisar el ejemplo de formato CSV para cargar las calificaciones antes de cualquier carga para evitar errores.
+                </p>
+              </div>
+
+              {/* Botón para mostrar ejemplo */}
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowEjemplo(!showEjemplo)}
+                  className="text-sm text-orange-600 hover:text-orange-800 underline"
+                >
+                  {showEjemplo ? "Ocultar ejemplo" : "Ver ejemplo de formato CSV"}
+                </button>
+              </div>
+
+              {/* Ejemplo de CSV */}
+              {showEjemplo && (
+                <div className="mb-4 p-4 bg-gray-50 border border-gray-300 rounded">
+                  <h3 className="text-sm font-semibold mb-2">Ejemplo de formato CSV:</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs border border-gray-300 bg-white">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="border border-gray-300 p-2 text-left">Ejercicio</th>
+                          <th className="border border-gray-300 p-2 text-left">Instrumento</th>
+                          <th className="border border-gray-300 p-2 text-left">Mercado</th>
+                          <th className="border border-gray-300 p-2 text-left">Fecha Pago</th>
+                          <th className="border border-gray-300 p-2 text-left">Secuencia</th>
+                          <th className="border border-gray-300 p-2 text-left">Año</th>
+                          <th className="border border-gray-300 p-2 text-left">Descripción</th>
+                          <th className="border border-gray-300 p-2 text-left">Factor08</th>
+                          <th className="border border-gray-300 p-2 text-left">Factor09</th>
+                          <th className="border border-gray-300 p-2 text-left">...</th>
+                          <th className="border border-gray-300 p-2 text-left">Factor37</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="border border-gray-300 p-2">Ejercicio 2025</td>
+                          <td className="border border-gray-300 p-2">Instrumento A</td>
+                          <td className="border border-gray-300 p-2">AC</td>
+                          <td className="border border-gray-300 p-2">2025-01-15</td>
+                          <td className="border border-gray-300 p-2">10001</td>
+                          <td className="border border-gray-300 p-2">2025</td>
+                          <td className="border border-gray-300 p-2">Descripción ejemplo</td>
+                          <td className="border border-gray-300 p-2">1.5</td>
+                          <td className="border border-gray-300 p-2">1.6</td>
+                          <td className="border border-gray-300 p-2">...</td>
+                          <td className="border border-gray-300 p-2">2.5</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-3 text-xs text-gray-600">
+                    <p><strong>Campos requeridos:</strong> Ejercicio, Instrumento, Mercado, Fecha Pago, Secuencia, Año</p>
+                    <p><strong>Campos opcionales:</strong> Descripción, Dividendo, Valor Histórico, ISFUT, Factor Actualización</p>
+                    <p><strong>Factores:</strong> Factor08, Factor09, ..., Factor37 (valores numéricos)</p>
+                    <p className="mt-2 text-orange-700"><strong>Recordatorio:</strong> El tipo de agregación será automáticamente "MASIVA" para todas las cargas masivas.</p>
+                  </div>
+                </div>
+              )}
+
               {csvDataRaw.length > 0 ? (
                 <div className="overflow-x-auto mb-5">
                   <table className="w-full text-sm border border-gray-300 bg-white">

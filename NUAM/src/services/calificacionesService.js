@@ -237,6 +237,46 @@ class CalificacionesService {
       throw error;
     }
   }
+
+  /**
+   * Carga múltiples calificaciones desde CSV
+   * @param {Array} datos - Array de objetos con datos normalizados del CSV
+   * @returns {Promise<Object>} - Objeto con resultados de la carga
+   */
+  async cargarCSV(datos) {
+    try {
+      const response = await fetch(API_ENDPOINTS.CALIFICACIONES.CARGAR_CSV, {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({ datos }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expirado, intentar refrescar
+          await authService.refreshAccessToken();
+          // Reintentar la petición
+          const retryResponse = await fetch(API_ENDPOINTS.CALIFICACIONES.CARGAR_CSV, {
+            method: 'POST',
+            headers: authService.getAuthHeaders(),
+            body: JSON.stringify({ datos }),
+          });
+          if (!retryResponse.ok) {
+            const errorData = await retryResponse.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Error al cargar CSV');
+          }
+          return await retryResponse.json();
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al cargar CSV');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en cargarCSV:', error);
+      throw error;
+    }
+  }
 }
 
 export default new CalificacionesService();

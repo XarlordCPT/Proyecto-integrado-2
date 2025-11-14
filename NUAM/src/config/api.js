@@ -14,6 +14,7 @@ export const API_ENDPOINTS = {
     TIPOS_AGREGACION: `${API_BASE_URL}/api/calificaciones/tipos-agregacion/`,
     EJERCICIOS: `${API_BASE_URL}/api/calificaciones/ejercicios/`,
     INSTRUMENTOS: `${API_BASE_URL}/api/calificaciones/instrumentos/`,
+    CARGAR_CSV: `${API_BASE_URL}/api/calificaciones/calificaciones/cargar_csv/`,
   },
 };
 

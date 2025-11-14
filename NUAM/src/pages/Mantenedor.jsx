@@ -462,7 +462,7 @@ export default function Mantenedor() {
 
   return (
     <div className="min-h-screen bg-[var(--fondo)] flex flex-col">
-      <div className="bg-[#323232] p-4 flex justify-between items-center text-white">
+      <div className="bg-[#404040] p-4 flex justify-between items-center text-orange-500">
         <h1 className="font-bold text-lg">Mantenedor de Calificaciones Tributarias</h1>
         <div className="flex items-center gap-2">
           <UserIcon className="h-6 w-6 text-[var(--nar)]" />
@@ -478,7 +478,7 @@ export default function Mantenedor() {
           )}
           <button
             onClick={handleLogout}
-            className="bg-[var(--nar)] text-black px-3 py-1 rounded font-semibold hover:opacity-90"
+            className="bg-orange-500 text-white px-3 py-1 rounded font-semibold hover:opacity-90"
           >
             Cerrar Sesión
           </button>
@@ -550,23 +550,23 @@ export default function Mantenedor() {
             className="border p-1 rounded text-sm"
           />
 
-          <section className="p-2"></section>
+          <section className="p-0"></section>
           <button
             onClick={handleClearFilters}
-            className="bg-[var(--nar)] rounded py-1 text-sm text-white hover:opacity-90"
+            className="bg-orange-500 rounded py-1 text-sm text-white hover:opacity-90"
           >
             Limpiar filtros
           </button>
 
-          <section className="p-7"></section>
+          <section className="p-5"></section>
           <button
             onClick={() => setShowModal(true)}
-            className="bg-[var(--nar)] text-white rounded py-1 text-sm hover:opacity-90"
+            className="bg-orange-500 text-white rounded py-1 text-sm hover:opacity-90"
           >
             Ingresar
           </button>
 
-          <section className="p-2"></section>
+          <section className="p-0"></section>
           <button
             onClick={() => setShowModalCarga(true)}
             className="bg-white border text-black rounded py-1 text-sm hover:bg-gray-100"
@@ -574,7 +574,7 @@ export default function Mantenedor() {
             Carga
           </button>
 
-          <section className="p-7"></section>
+          <section className="p-0"></section>
                 <button
                   onClick={() => {
                     if (selectedRow) {
@@ -591,7 +591,7 @@ export default function Mantenedor() {
                   Modificar
                 </button>
 
-          <section className="p-2"></section>
+          <section className="p-0"></section>
           <button
             onClick={handleEliminar}
             disabled={!selectedRow}
@@ -689,7 +689,46 @@ export default function Mantenedor() {
         <Cargar
           onClose={() => setShowModalCarga(false)}
           onSubmit={async (nuevos) => {
-            await reloadCalificaciones();
+            try {
+              setLoading(true);
+              
+              // Enviar datos al backend para procesar CSV
+              const resultados = await calificacionesService.cargarCSV(nuevos);
+              
+              // Mostrar resultados
+              if (resultados.creadas > 0) {
+                let mensaje = `Se crearon ${resultados.creadas} calificación(es) exitosamente.`;
+                if (resultados.fallidas > 0) {
+                  mensaje += `\n${resultados.fallidas} calificación(es) fallaron.`;
+                }
+                alert(mensaje);
+              } else {
+                alert('No se pudieron crear calificaciones. Verifica los errores en la consola.');
+              }
+              
+              // Mostrar errores en consola si los hay
+              if (resultados.errores && resultados.errores.length > 0) {
+                console.error('Errores al cargar CSV:', resultados.errores);
+                let mensajeErrores = 'Errores encontrados:\n';
+                resultados.errores.slice(0, 10).forEach((error) => {
+                  mensajeErrores += `Fila ${error.fila}: ${error.error}\n`;
+                });
+                if (resultados.errores.length > 10) {
+                  mensajeErrores += `... y ${resultados.errores.length - 10} error(es) más.`;
+                }
+                alert(mensajeErrores);
+              }
+              
+              // Recargar calificaciones
+              await reloadCalificaciones();
+              
+              setShowModalCarga(false);
+            } catch (error) {
+              console.error('Error al cargar CSV:', error);
+              alert(`Error al cargar CSV: ${error.message}`);
+            } finally {
+              setLoading(false);
+            }
           }}
         />
       )}
