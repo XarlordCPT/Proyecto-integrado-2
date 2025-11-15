@@ -1,10 +1,13 @@
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-9e$n2+jr-h5q9^hncb5)vvl3$_11g!uc71y5%!k9=*&$13&f!n'
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Configuración desde variables de entorno (.env)
+# Si no existe .env, usa valores por defecto (solo para desarrollo)
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-9e$n2+jr-h5q9^hncb5)vvl3$_11g!uc71y5%!k9=*&$13&f!n')
+DEBUG = config('DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -58,11 +61,11 @@ WSGI_APPLICATION = 'Nuam_Backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',                    
-        'USER': 'postgres',                     
-        'PASSWORD': 'C2BvUUvFpYw6W0Zl',  
-        'HOST': 'db.qzzqtecsamnvslzxpsjl.supabase.co',  
-        'PORT': '5432',                         
+        'NAME': config('DB_NAME', default='postgres'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
             'sslmode': 'require'
         }
@@ -157,9 +160,9 @@ AUTH_USER_MODEL = 'core.Usuario'
 # Email SMTP: Usado para envío de códigos de recuperación de contraseña
 # Endpoint: /api/auth/password-reset/request/ (core/views.py - request_password_reset)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'project.nuam.recovery.mail@gmail.com'
-EMAIL_HOST_PASSWORD = 'kkerofqzzxzbofmn'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

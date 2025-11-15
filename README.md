@@ -63,18 +63,40 @@ Si alguno no está instalado, descarga e instala desde los enlaces de arriba.
    ```
    Esto tomará varios minutos. Espera a que termine.
 
-7. Crea las tablas en la base de datos:
+7. **Configura las variables de entorno:**
+   
+   El proyecto usa variables de entorno para proteger credenciales sensibles (base de datos, email, etc.).
+   
+   a. Copia el archivo de ejemplo:
+      ```bash
+      # En PowerShell
+      Copy-Item .env.example .env
+      
+      # O en CMD
+      copy .env.example .env
+      ```
+   
+   b. Abre el archivo `.env` con tu editor de texto y reemplaza los valores de ejemplo con tus credenciales reales:
+      - `SECRET_KEY`: Genera una nueva con: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`
+      - `DB_PASSWORD`: Tu contraseña de PostgreSQL
+      - `DB_HOST`: Tu host de base de datos
+      - `EMAIL_HOST_USER`: Tu email para envío de correos
+      - `EMAIL_HOST_PASSWORD`: Tu contraseña de aplicación de Gmail
+   
+   ⚠️ **IMPORTANTE:** El archivo `.env` contiene credenciales sensibles y NO se sube a Git. Solo el archivo `.env.example` (template) se sube al repositorio.
+
+8. Crea las tablas en la base de datos:
    ```bash
    python manage.py migrate
    ```
 
-8. (Opcional) Crea un superusuario para el admin:
+9. (Opcional) Crea un superusuario para el admin:
    ```bash
    python manage.py createsuperuser
    ```
    Sigue las instrucciones en pantalla.
 
-9. Ve de vuelta a la carpeta raíz:
+10. Ve de vuelta a la carpeta raíz:
    ```bash
    cd ..
    ```
@@ -132,18 +154,36 @@ Si alguno no está instalado, descarga e instala desde los enlaces de arriba.
    ```
    Esto tomará varios minutos. Espera a que termine.
 
-7. Crea las tablas en la base de datos:
+7. **Configura las variables de entorno:**
+   
+   El proyecto usa variables de entorno para proteger credenciales sensibles (base de datos, email, etc.).
+   
+   a. Copia el archivo de ejemplo:
+      ```bash
+      cp .env.example .env
+      ```
+   
+   b. Abre el archivo `.env` con tu editor de texto y reemplaza los valores de ejemplo con tus credenciales reales:
+      - `SECRET_KEY`: Genera una nueva con: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`
+      - `DB_PASSWORD`: Tu contraseña de PostgreSQL
+      - `DB_HOST`: Tu host de base de datos
+      - `EMAIL_HOST_USER`: Tu email para envío de correos
+      - `EMAIL_HOST_PASSWORD`: Tu contraseña de aplicación de Gmail
+   
+   ⚠️ **IMPORTANTE:** El archivo `.env` contiene credenciales sensibles y NO se sube a Git. Solo el archivo `.env.example` (template) se sube al repositorio.
+
+8. Crea las tablas en la base de datos:
    ```bash
    python manage.py migrate
    ```
 
-8. (Opcional) Crea un superusuario para el admin:
+9. (Opcional) Crea un superusuario para el admin:
    ```bash
    python manage.py createsuperuser
    ```
    Sigue las instrucciones en pantalla.
 
-9. Ve de vuelta a la carpeta raíz:
+10. Ve de vuelta a la carpeta raíz:
    ```bash
    cd ..
    ```
@@ -289,6 +329,72 @@ Para detener los servidores:
    ```bash
    deactivate
    ```
+
+---
+
+## 🔒 Seguridad y Variables de Entorno
+
+### ¿Por qué usar variables de entorno?
+
+El proyecto utiliza variables de entorno para proteger información sensible como:
+- Claves secretas de Django
+- Credenciales de base de datos
+- Contraseñas de email
+- Configuraciones de producción
+
+**Nunca subas credenciales reales a Git.** El archivo `.env` está en `.gitignore` y no se sube al repositorio.
+
+### Archivos relacionados
+
+- **`.env.example`**: Template con la estructura de variables (SÍ se sube a Git)
+- **`.env`**: Archivo con tus credenciales reales (NO se sube a Git)
+- **`settings.py`**: Lee las variables del archivo `.env` usando `python-decouple`
+
+### Variables de entorno requeridas
+
+El archivo `.env` debe contener las siguientes variables (ver `.env.example` para más detalles):
+
+```env
+# Django
+SECRET_KEY=tu-secret-key-generada
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Base de datos PostgreSQL
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=tu-password
+DB_HOST=tu-host.supabase.co
+DB_PORT=5432
+
+# Email SMTP
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=tu-email@gmail.com
+EMAIL_HOST_PASSWORD=tu-app-password
+```
+
+### Generar una nueva SECRET_KEY
+
+Si necesitas generar una nueva clave secreta para Django:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+### Ubicación del archivo .env
+
+El archivo `.env` debe estar en la carpeta `Nuam_Backend/` (misma ubicación que `manage.py`):
+
+```
+Nuam_Backend/
+├── manage.py
+├── .env          ← Aquí debe estar
+├── .env.example  ← Template (se sube a Git)
+└── Nuam_Backend/
+    └── settings.py  ← Lee el .env de la carpeta de arriba
+```
 
 ---
 
@@ -767,6 +873,3 @@ source Ambiente/bin/activate
 ## 📄 Licencia
 
 Proyecto Integrado académico desarrollado para INACAP.
-
-**Versión**: 1.0.0  
-**Última actualización**: 2025

@@ -4,4 +4,5 @@ djangorestframework-simplejwt
 django-cors-headers
 djoser
 psycopg2-binary>=2.9.9
+python-decouple>=3.8
 

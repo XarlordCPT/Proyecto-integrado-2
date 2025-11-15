@@ -27,8 +27,11 @@ db.sqlite3-journal
 *~
 
 # Environment variables
+# Ignora archivos .env con credenciales reales, pero permite .env.example (template)
 .env
 .env.local
+*.env
+!*.env.example
 
 # Credentials
 Credencialposgre.txt
