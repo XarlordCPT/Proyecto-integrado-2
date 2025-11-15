@@ -465,7 +465,13 @@ export default function Mantenedor() {
       <div className="bg-[#404040] p-4 flex justify-between items-center text-orange-500">
         <h1 className="font-bold text-lg">Mantenedor de Calificaciones Tributarias</h1>
         <div className="flex items-center gap-2">
-          <UserIcon className="h-6 w-6 text-[var(--nar)]" />
+          <button
+            onClick={() => navigate("/perfil")}
+            className="hover:opacity-80 transition-opacity cursor-pointer"
+            title="Ver perfil"
+          >
+            <UserIcon className="h-6 w-6 text-[var(--nar)]" />
+          </button>
           {user?.rol && user.rol.toLowerCase() === "administrador" && (
             <button
               type="button"
@@ -623,7 +629,12 @@ export default function Mantenedor() {
               selectableRows
               selectableRowsSingle
               onSelectedRowsChange={(state) => {
-                setSelectedRow(state.selectedRows[0] || null);
+                const newSelection = state.selectedRows[0] || null;
+                // Si había una fila seleccionada y se selecciona otra, cerrar modal si está abierto
+                if (selectedRow && newSelection && selectedRow.id !== newSelection?.id && showModalModificar) {
+                  setShowModalModificar(false);
+                }
+                setSelectedRow(newSelection);
               }}
               fixedHeader
               fixedHeaderScrollHeight="calc(100vh - 250px)"
@@ -679,6 +690,7 @@ export default function Mantenedor() {
         <ModificarCalificacion
           onClose={() => {
             setShowModalModificar(false);
+            setSelectedRow(null); // Limpiar selección al cerrar
           }}
           onSubmit={handleModificar}
           calificacionData={selectedRow}

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";  
 import Mantenedor from "./pages/Mantenedor";
+import Perfil from "./pages/Perfil";
 import PrivateRoute from "./components/PrivateRoute";
 
 export default function App() {
@@ -13,6 +14,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <Mantenedor />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/perfil" 
+          element={
+            <PrivateRoute>
+              <Perfil />
             </PrivateRoute>
           } 
         />

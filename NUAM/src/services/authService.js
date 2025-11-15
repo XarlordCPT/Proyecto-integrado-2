@@ -1,7 +1,10 @@
 import { API_ENDPOINTS } from '../config/api';
 
 /**
- * Servicio para manejar la autenticación con el backend
+ * Servicio de autenticación - Conecta frontend con backend Django
+ * Backend: Nuam_Backend/core/views.py
+ * URLs: Nuam_Backend/core/urls.py
+ * Autenticación: JWT (JSON Web Tokens) con Bearer token en headers
  */
 class AuthService {
   /**
@@ -115,6 +118,97 @@ class AuthService {
       'Authorization': token ? `Bearer ${token}` : '',
       'Content-Type': 'application/json',
     };
+  }
+
+  /**
+   * Solicita un código de recuperación de contraseña
+   * @param {string} email - Email del usuario
+   * @returns {Promise<{message: string, user_id: number}>}
+   */
+  async requestPasswordReset(email) {
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.PASSWORD_RESET_REQUEST, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al solicitar recuperación de contraseña');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en requestPasswordReset:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Valida solo el código de reset (sin cambiar contraseña)
+   * @param {number} userId - ID del usuario
+   * @param {string} code - Código de verificación de 6 dígitos
+   * @returns {Promise<{message: string, valid: boolean}>}
+   */
+  async validatePasswordResetCode(userId, code) {
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.PASSWORD_RESET_VALIDATE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          code: code,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al validar el código');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en validatePasswordResetCode:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verifica el código y cambia la contraseña
+   * @param {number} userId - ID del usuario
+   * @param {string} code - Código de verificación de 6 dígitos
+   * @param {string} newPassword - Nueva contraseña
+   * @returns {Promise<{message: string}>}
+   */
+  async verifyPasswordReset(userId, code, newPassword) {
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.PASSWORD_RESET_VERIFY, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          code: code,
+          new_password: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al verificar el código');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en verifyPasswordReset:', error);
+      throw error;
+    }
   }
 }
 

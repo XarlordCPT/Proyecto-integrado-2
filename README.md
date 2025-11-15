@@ -1,366 +1,657 @@
 # NUAM - Sistema de Gestión de Calificaciones Tributarias
 
-## 📋 Descripción del Proyecto
+Sistema web full-stack para la gestión integral de calificaciones tributarias. Permite administrar calificaciones financieras, instrumentos, factores de actualización, ejercicios contables y usuarios con roles diferenciados.
 
-NUAM es un sistema web full-stack diseñado para la gestión integral de calificaciones tributarias. El sistema permite administrar calificaciones financieras, instrumentos, factores de actualización, ejercicios contables y usuarios con roles diferenciados.
+## 📋 Prerrequisitos
 
-### Características Principales
+Antes de comenzar, necesitas tener instalado:
 
-- ✅ Autenticación basada en JWT (JSON Web Tokens)
-- ✅ Sistema de roles y permisos (Administrador, Usuario)
-- ✅ Gestión completa de calificaciones (CRUD)
-- ✅ Ingreso de calificaciones por factores o montos
-- ✅ Carga masiva mediante archivos CSV
-- ✅ Dashboard administrativo con gráficos y estadísticas
-- ✅ Interfaz moderna y responsive
-- ✅ API REST documentada
+- **Python 3.8 o superior** - [Descargar Python](https://www.python.org/downloads/)
+- **Node.js 16 o superior** - [Descargar Node.js](https://nodejs.org/) (recomendado LTS)
+- **npm** - Viene incluido con Node.js
+- **PostgreSQL** - Ya configurado en el proyecto
 
-## 🏗️ Arquitectura del Sistema
+### Verificar que tienes todo instalado
 
-El proyecto sigue una arquitectura cliente-servidor con separación de responsabilidades:
+Abre una terminal (PowerShell/CMD en Windows, Terminal en Linux/Mac) y ejecuta:
 
-```
-NUAM/
-├── Backend (Django REST Framework)
-│   ├── API REST para gestión de datos
-│   ├── Autenticación JWT
-│   ├── Panel administrativo personalizado
-│   └── Base de datos SQLite/PostgreSQL
-│
-└── Frontend (React + Vite)
-    ├── Interfaz de usuario reactiva
-    ├── Gestión de estado con Context API
-    ├── Routing con React Router
-    └── Componentes reutilizables
+```bash
+python --version    # Debe mostrar Python 3.8 o superior
+node --version      # Debe mostrar v16 o superior
+npm --version       # Debe mostrar la versión de npm
 ```
 
-## 🚀 Tecnologías Utilizadas
+Si alguno no está instalado, descarga e instala desde los enlaces de arriba.
 
-### Backend
-- **Django** 5.2.7 - Framework web de alto nivel
-- **Django REST Framework** - Construcción de API REST
-- **Django REST Framework Simple JWT** - Autenticación con tokens JWT
-- **Django CORS Headers** - Manejo de CORS entre frontend y backend
-- **Djoser** - Sistema de autenticación de usuarios
-- **psycopg2-binary** - Adaptador PostgreSQL (opcional)
-- **SQLite** - Base de datos por defecto
+**⚠️ IMPORTANTE en Windows:** Al instalar Python, marca la opción **"Add Python to PATH"**.
 
-### Frontend
-- **React** 19.1.1 - Biblioteca de JavaScript para interfaces
-- **Vite** 7.1.7 - Build tool y dev server
-- **React Router DOM** 7.9.5 - Enrutamiento de aplicaciones
-- **Tailwind CSS** 4.1.17 - Framework de CSS utility-first
-- **React Data Table Component** 7.7.0 - Componente de tablas avanzadas
-- **PapaParse** 5.5.3 - Procesamiento de archivos CSV
-- **Chart.js** - Gráficos para el dashboard administrativo
+---
+
+## 🚀 Instalación Paso a Paso
+
+### Windows
+
+#### Paso 1: Instalar Backend (Django)
+
+1. Abre PowerShell o CMD en la carpeta del proyecto.
+
+2. Ve a la carpeta del backend:
+   ```bash
+   cd Nuam_Backend
+   ```
+
+3. Crea un entorno virtual de Python:
+   ```bash
+   python -m venv Ambiente
+   ```
+   Esto creará una carpeta llamada `Ambiente` con el entorno virtual.
+
+4. Activa el entorno virtual:
+   ```bash
+   Ambiente\Scripts\activate
+   ```
+   Verás `(Ambiente)` al inicio de la línea, eso significa que está activado.
+
+5. Actualiza pip:
+   ```bash
+   python -m pip install --upgrade pip
+   ```
+
+6. Instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   Esto tomará varios minutos. Espera a que termine.
+
+7. Crea las tablas en la base de datos:
+   ```bash
+   python manage.py migrate
+   ```
+
+8. (Opcional) Crea un superusuario para el admin:
+   ```bash
+   python manage.py createsuperuser
+   ```
+   Sigue las instrucciones en pantalla.
+
+9. Ve de vuelta a la carpeta raíz:
+   ```bash
+   cd ..
+   ```
+
+#### Paso 2: Instalar Frontend (React)
+
+1. Abre una nueva terminal (PowerShell/CMD) en la carpeta del proyecto.
+
+2. Ve a la carpeta del frontend:
+   ```bash
+   cd NUAM
+   ```
+
+3. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+   Esto tomará varios minutos. Espera a que termine.
+
+4. Ya está instalado el frontend. No necesitas hacer nada más.
+
+---
+
+### Linux / Mac
+
+#### Paso 1: Instalar Backend (Django)
+
+1. Abre una terminal en la carpeta del proyecto.
+
+2. Ve a la carpeta del backend:
+   ```bash
+   cd Nuam_Backend
+   ```
+
+3. Crea un entorno virtual de Python:
+   ```bash
+   python3 -m venv Ambiente
+   ```
+   Esto creará una carpeta llamada `Ambiente` con el entorno virtual.
+
+4. Activa el entorno virtual:
+   ```bash
+   source Ambiente/bin/activate
+   ```
+   Verás `(Ambiente)` al inicio de la línea, eso significa que está activado.
+
+5. Actualiza pip:
+   ```bash
+   pip install --upgrade pip
+   ```
+
+6. Instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   Esto tomará varios minutos. Espera a que termine.
+
+7. Crea las tablas en la base de datos:
+   ```bash
+   python manage.py migrate
+   ```
+
+8. (Opcional) Crea un superusuario para el admin:
+   ```bash
+   python manage.py createsuperuser
+   ```
+   Sigue las instrucciones en pantalla.
+
+9. Ve de vuelta a la carpeta raíz:
+   ```bash
+   cd ..
+   ```
+
+#### Paso 2: Instalar Frontend (React)
+
+1. Abre una nueva terminal en la carpeta del proyecto.
+
+2. Ve a la carpeta del frontend:
+   ```bash
+   cd NUAM
+   ```
+
+3. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+   Esto tomará varios minutos. Espera a que termine.
+
+4. Ya está instalado el frontend. No necesitas hacer nada más.
+
+---
+
+## ▶️ Ejecutar el Sistema
+
+Necesitas ejecutar DOS terminales, una para el backend y otra para el frontend.
+
+### Windows
+
+#### Terminal 1 - Backend
+
+1. Abre PowerShell o CMD en la carpeta del proyecto.
+
+2. Ve a la carpeta del backend:
+   ```bash
+   cd Nuam_Backend
+   ```
+
+3. Activa el entorno virtual:
+   ```bash
+   Ambiente\Scripts\activate
+   ```
+
+4. Inicia el servidor de Django:
+   ```bash
+   python manage.py runserver
+   ```
+
+5. Verás algo como:
+   ```
+   Starting development server at http://127.0.0.1:8000/
+   ```
+
+6. **DEJA ESTA TERMINAL ABIERTA.** El servidor está corriendo.
+
+#### Terminal 2 - Frontend
+
+1. Abre una **NUEVA** terminal (PowerShell/CMD) en la carpeta del proyecto.
+
+2. Ve a la carpeta del frontend:
+   ```bash
+   cd NUAM
+   ```
+
+3. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+4. Verás algo como:
+   ```
+   VITE v7.1.7  ready in xxx ms
+   ➜  Local:   http://localhost:5173/
+   ```
+
+5. **DEJA ESTA TERMINAL ABIERTA.** El servidor está corriendo.
+
+6. Abre tu navegador y ve a: **http://localhost:5173**
+
+---
+
+### Linux / Mac
+
+#### Terminal 1 - Backend
+
+1. Abre una terminal en la carpeta del proyecto.
+
+2. Ve a la carpeta del backend:
+   ```bash
+   cd Nuam_Backend
+   ```
+
+3. Activa el entorno virtual:
+   ```bash
+   source Ambiente/bin/activate
+   ```
+
+4. Inicia el servidor de Django:
+   ```bash
+   python manage.py runserver
+   ```
+
+5. Verás algo como:
+   ```
+   Starting development server at http://127.0.0.1:8000/
+   ```
+
+6. **DEJA ESTA TERMINAL ABIERTA.** El servidor está corriendo.
+
+#### Terminal 2 - Frontend
+
+1. Abre una **NUEVA** terminal en la carpeta del proyecto.
+
+2. Ve a la carpeta del frontend:
+   ```bash
+   cd NUAM
+   ```
+
+3. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+4. Verás algo como:
+   ```
+   VITE v7.1.7  ready in xxx ms
+   ➜  Local:   http://localhost:5173/
+   ```
+
+5. **DEJA ESTA TERMINAL ABIERTA.** El servidor está corriendo.
+
+6. Abre tu navegador y ve a: **http://localhost:5173**
+
+---
+
+## 🛑 Detener el Sistema
+
+Para detener los servidores:
+
+1. Ve a cada terminal donde está corriendo un servidor.
+2. Presiona `Ctrl + C` en cada terminal.
+3. Para desactivar el entorno virtual del backend:
+   ```bash
+   deactivate
+   ```
+
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
 Proyecto integrado 2/
-├── Nuam_Backend/                 # Backend Django
-│   ├── core/                     # App de usuarios y autenticación
-│   │   ├── models.py            # Modelos: Usuario, Rol, Empleado
-│   │   ├── serializers.py       # Serializers para API
-│   │   ├── views.py             # Vistas de autenticación
-│   │   ├── urls.py              # URLs de autenticación
-│   │   └── signals.py           # Señales Django (is_staff automático)
-│   ├── calificaciones/          # App de calificaciones
-│   │   ├── models.py            # Modelos: Calificacion, Factor, Instrumento, etc.
-│   │   ├── serializers.py       # Serializers para CRUD
-│   │   ├── views.py             # ViewSets y vistas del dashboard
-│   │   └── urls.py              # URLs de la API
-│   ├── Nuam_Backend/            # Configuración del proyecto
-│   │   ├── settings.py          # Configuración Django
-│   │   └── urls.py              # URLs principales
-│   ├── templates/               # Plantillas personalizadas
+│
+├── 📂 Nuam_Backend/                    # Backend Django
+│   │
+│   ├── 📂 core/                        # App de usuarios y autenticación
+│   │   ├── models.py                   # Modelos: Usuario, Rol, Empleado
+│   │   ├── serializers.py              # Serializers para autenticación JWT
+│   │   ├── views.py                    # Endpoints de autenticación (login, password reset, profile)
+│   │   ├── urls.py                     # URLs de autenticación (/api/auth/*)
+│   │   ├── signals.py                  # Señales Django (asigna is_staff automáticamente)
+│   │   ├── admin.py                    # Configuración del admin para usuarios
+│   │   └── migrations/                 # Migraciones de base de datos
+│   │
+│   ├── 📂 calificaciones/              # App de gestión de calificaciones
+│   │   ├── models.py                   # Modelos: Calificacion, Factor, Instrumento, Mercado, TipoAgregacion, Ejercicio
+│   │   ├── serializers.py              # Serializers para CRUD de calificaciones
+│   │   ├── views.py                    # ViewSets para CRUD y endpoint cargar_csv
+│   │   ├── urls.py                     # URLs de calificaciones (/api/calificaciones/*)
+│   │   ├── admin.py                    # Configuración del admin para calificaciones
+│   │   └── migrations/                 # Migraciones de base de datos
+│   │
+│   ├── 📂 Nuam_Backend/                # Configuración principal del proyecto
+│   │   ├── settings.py                 # Configuración Django (DB, CORS, JWT, Email)
+│   │   ├── urls.py                     # URLs principales (incluye /api/auth/* y /api/calificaciones/*)
+│   │   ├── wsgi.py                     # WSGI para producción
+│   │   └── asgi.py                     # ASGI para producción
+│   │
+│   ├── 📂 templates/                   # Plantillas HTML personalizadas
 │   │   └── admin/
-│   │       └── index.html       # Dashboard administrativo
-│   ├── static/                  # Archivos estáticos
+│   │       └── index.html              # Dashboard administrativo personalizado
+│   │
+│   ├── 📂 static/                      # Archivos estáticos
 │   │   └── admin/
 │   │       ├── css/
-│   │       │   └── admin_custom.css
+│   │       │   └── admin_custom.css    # Estilos personalizados del admin
 │   │       └── js/
-│   │           └── dashboard.js
-│   ├── manage.py                # Script de administración Django
-│   └── requirements.txt         # Dependencias Python
+│   │           └── dashboard.js        # JavaScript del dashboard admin
+│   │
+│   ├── manage.py                       # Script principal de Django
+│   ├── requirements.txt                # Dependencias Python del proyecto
+│   ├── db.sqlite3                      # Base de datos SQLite (desarrollo)
+│   └── .env.example                    # Ejemplo de variables de entorno
 │
-├── NUAM/                        # Frontend React
-│   ├── src/
-│   │   ├── components/          # Componentes reutilizables
-│   │   │   ├── Ingresar.jsx
-│   │   │   ├── IngresarFactores.jsx
-│   │   │   ├── IngresarMontos.jsx
-│   │   │   ├── ModificarCalificacion.jsx
-│   │   │   ├── Cargar.jsx
-│   │   │   └── PrivateRoute.jsx
-│   │   ├── pages/               # Páginas principales
-│   │   │   ├── Login.jsx
-│   │   │   └── Mantenedor.jsx
-│   │   ├── context/             # Context API
-│   │   │   └── AuthContext.jsx
-│   │   ├── services/            # Servicios API
-│   │   │   ├── authService.js
-│   │   │   └── calificacionesService.js
-│   │   ├── config/              # Configuración
-│   │   │   └── api.js
-│   │   └── main.jsx             # Punto de entrada
-│   ├── package.json             # Dependencias Node.js
-│   └── vite.config.js           # Configuración Vite
-│
-├── install.sh                   # Script de instalación (Linux/Mac)
-├── install.bat                  # Script de instalación (Windows)
-├── start.sh                     # Script de inicio (Linux/Mac)
-├── start.bat                    # Script de inicio (Windows)
-└── README.md                    # Este archivo
+└── 📂 NUAM/                            # Frontend React + Vite
+    │
+    ├── 📂 src/                         # Código fuente del frontend
+    │   │
+    │   ├── 📂 pages/                   # Páginas principales de la aplicación
+    │   │   ├── Login.jsx               # Página de inicio de sesión y recuperación de contraseña
+    │   │   ├── Mantenedor.jsx          # Página principal con tabla de calificaciones y filtros
+    │   │   └── Perfil.jsx              # Página de perfil del usuario
+    │   │
+    │   ├── 📂 components/              # Componentes reutilizables
+    │   │   ├── Ingresar.jsx            # Modal para ingresar nueva calificación (datos básicos)
+    │   │   ├── IngresarFactores.jsx    # Modal para ingresar factores (paso 2)
+    │   │   ├── IngresarMontos.jsx      # Modal para ingresar montos que se convierten a factores
+    │   │   ├── ModificarCalificacion.jsx # Modal para modificar calificación existente
+    │   │   ├── Modificar.jsx           # Componente de modificación de factores
+    │   │   ├── Cargar.jsx              # Modal para carga masiva de CSV
+    │   │   ├── EliminarConfirm.jsx     # Modal de confirmación para eliminar calificación
+    │   │   ├── PrivateRoute.jsx        # Componente para proteger rutas (requiere autenticación)
+    │   │   └── UserIcon.jsx            # Icono de usuario
+    │   │
+    │   ├── 📂 services/                # Servicios para comunicación con la API
+    │   │   ├── authService.js          # Servicio de autenticación (login, refresh token, password reset)
+    │   │   └── calificacionesService.js # Servicio de calificaciones (CRUD, CSV, catálogos)
+    │   │
+    │   ├── 📂 context/                 # Context API de React
+    │   │   └── AuthContext.jsx         # Contexto de autenticación (usuario, login, logout)
+    │   │
+    │   ├── 📂 config/                  # Configuración del frontend
+    │   │   └── api.js                  # Configuración de endpoints de la API
+    │   │
+    │   ├── 📂 routes/                  # Configuración de rutas
+    │   │   └── AppRouter.jsx           # Router principal de la aplicación
+    │   │
+    │   ├── 📂 assets/                  # Recursos estáticos
+    │   │   ├── Logo_Nuam.png           # Logo de NUAM
+    │   │   └── Logo_Inacap.png         # Logo de INACAP
+    │   │
+    │   ├── 📂 data/                    # Datos estáticos (si aplica)
+    │   │   └── calificaciones.js       # Datos de ejemplo
+    │   │
+    │   ├── App.jsx                     # Componente raíz de la aplicación
+    │   ├── App.css                     # Estilos globales de la aplicación
+    │   ├── main.jsx                    # Punto de entrada de la aplicación React
+    │   └── index.css                   # Estilos base
+    │
+    ├── public/                         # Archivos públicos
+    │   └── vite.svg                    # Icono de Vite
+    │
+    ├── index.html                      # HTML principal
+    ├── package.json                    # Dependencias Node.js y scripts
+    ├── vite.config.js                  # Configuración de Vite
+    └── eslint.config.js                # Configuración de ESLint
 ```
 
-## 🔧 Prerrequisitos
+## 📝 Descripción Detallada de Archivos
 
-Antes de instalar el proyecto, asegúrate de tener instalado:
+### Backend (Nuam_Backend/)
 
-- **Python** 3.8 o superior
-- **Node.js** 16 o superior
-- **npm** (incluido con Node.js)
-- **Git** (opcional, para clonar el repositorio)
-- **PostgreSQL** (opcional, para producción)
+#### `core/` - Usuarios y Autenticación
 
-### Verificar instalación
+**`models.py`**
+- Define los modelos de base de datos:
+  - `Usuario`: Usuario del sistema (extiende AbstractUser de Django)
+  - `Rol`: Roles del sistema (Administrador, Usuario)
+  - `Empleado`: Información de empleados (RUT)
 
-```bash
-# Verificar Python
-python --version
-# Debe mostrar Python 3.8 o superior
+**`serializers.py`**
+- `MyTokenObtainPairSerializer`: Serializer personalizado para JWT que incluye información del usuario en el token
 
-# Verificar Node.js
-node --version
-# Debe mostrar v16 o superior
+**`views.py`**
+- `MyTokenObtainPairView`: Vista para login y obtener tokens JWT
+- `admin_login_token`: Genera token temporal para acceder al admin de Django
+- `request_password_reset`: Solicita código de 6 dígitos por email
+- `validate_reset_code`: Valida el código antes de cambiar contraseña
+- `verify_reset_code`: Cambia la contraseña después de validar código
+- `get_user_profile`: Retorna datos del usuario autenticado
 
-# Verificar npm
-npm --version
-```
+**`urls.py`**
+- Define todas las URLs de autenticación: `/api/auth/token/`, `/api/auth/password-reset/*`, etc.
 
-## 📦 Instalación Automática
+**`signals.py`**
+- Señales Django que asignan automáticamente `is_staff=True` cuando un usuario tiene rol "Administrador"
 
-### Opción 1: Instalación Automática con Scripts
+**`admin.py`**
+- Configuración del panel administrativo de Django para usuarios
 
-#### Windows
+---
 
-1. Abre PowerShell o CMD en la carpeta del proyecto
-2. Ejecuta el script de instalación:
-   ```bash
-   install.bat
-   ```
-3. El script realizará automáticamente:
-   - Creación del entorno virtual de Python
-   - Instalación de dependencias del backend
-   - Instalación de dependencias del frontend
-   - Creación de las migraciones
-   - Configuración de la base de datos
+#### `calificaciones/` - Gestión de Calificaciones
 
-#### Linux / Mac
+**`models.py`**
+- Define los modelos de base de datos:
+  - `Calificacion`: Calificación tributaria principal
+  - `Factor`: Factores de actualización (Factor_8 a Factor_37)
+  - `Instrumento`: Instrumentos financieros
+  - `Mercado`: Mercados financieros
+  - `TipoAgregacion`: Tipos de agregación (MANUAL, MASIVA, etc.)
+  - `Ejercicio`: Ejercicios contables
+  - `Reporte`: Logs de acciones del sistema
 
-1. Abre una terminal en la carpeta del proyecto
-2. Da permisos de ejecución al script:
-   ```bash
-   chmod +x install.sh
-   ```
-3. Ejecuta el script de instalación:
-   ```bash
-   ./install.sh
-   ```
-4. El script realizará automáticamente todas las tareas de instalación
+**`serializers.py`**
+- `CalificacionSerializer`: Serializer principal para CRUD de calificaciones
+  - Campos de lectura: `usuario`, `tipo_agregacion_info`, `ejercicio_info`, `instrumento_info`
+  - Campos de escritura: `tipo_agregacion`, `ejercicio`, `instrumento` (IDs)
+  - Maneja creación/actualización de factores relacionados
+- Serializers para catálogos: `MercadoSerializer`, `EjercicioSerializer`, `InstrumentoSerializer`, etc.
 
-### Opción 2: Instalación Manual
+**`views.py`**
+- `MercadoViewSet`, `EjercicioViewSet`, `TipoAgregacionViewSet`, `InstrumentoViewSet`: CRUD para catálogos
+- `CalificacionViewSet`: 
+  - CRUD estándar de calificaciones
+  - `cargar_csv`: Endpoint personalizado para carga masiva desde CSV
+- `dashboard_stats`: Endpoint para estadísticas del dashboard admin
 
-#### Backend
+**`urls.py`**
+- Define todas las URLs de calificaciones: `/api/calificaciones/calificaciones/`, `/api/calificaciones/mercados/`, etc.
 
-1. **Navega a la carpeta del backend:**
-   ```bash
-   cd Nuam_Backend
-   ```
+**`admin.py`**
+- Configuración del panel administrativo de Django para calificaciones
 
-2. **Crea un entorno virtual:**
-   ```bash
-   # Windows
-   python -m venv Ambiente
-   
-   # Linux/Mac
-   python3 -m venv Ambiente
-   ```
+---
 
-3. **Activa el entorno virtual:**
-   ```bash
-   # Windows
-   Ambiente\Scripts\activate
-   
-   # Linux/Mac
-   source Ambiente/bin/activate
-   ```
+#### `Nuam_Backend/` - Configuración Principal
 
-4. **Instala las dependencias:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+**`settings.py`**
+- Configuración completa de Django:
+  - Base de datos PostgreSQL
+  - REST Framework con JWT
+  - CORS (permite peticiones desde frontend)
+  - Configuración de email SMTP (Gmail)
+  - Modelo de usuario personalizado
 
-5. **Realiza las migraciones:**
-   ```bash
-   python manage.py migrate
-   ```
+**`urls.py`**
+- URLs principales del proyecto:
+  - `/api/auth/*` → core.urls
+  - `/api/calificaciones/*` → calificaciones.urls
+  - `/admin/` → Panel administrativo de Django
 
-6. **Crea un superusuario (opcional):**
-   ```bash
-   python manage.py createsuperuser
-   ```
+---
 
-#### Frontend
+#### `templates/admin/index.html`
+- Dashboard administrativo personalizado con gráficos y estadísticas
 
-1. **Navega a la carpeta del frontend:**
-   ```bash
-   cd NUAM
-   ```
+#### `static/admin/`
+- CSS y JavaScript personalizados para el dashboard del admin
 
-2. **Instala las dependencias:**
-   ```bash
-   npm install
-   ```
+---
 
-## 🚀 Inicio Rápido
+### Frontend (NUAM/)
 
-### Opción 1: Scripts de Inicio Automático
+#### `src/pages/` - Páginas Principales
 
-#### Windows
-```bash
-start.bat
-```
+**`Login.jsx`**
+- Página de inicio de sesión
+- Modal de recuperación de contraseña (3 pasos: email, código, nueva contraseña)
+- Valida credenciales y maneja errores
 
-#### Linux / Mac
-```bash
-chmod +x start.sh
-./start.sh
-```
+**`Mantenedor.jsx`**
+- Página principal del sistema
+- Tabla de calificaciones con filtros (ejercicio, instrumento, fecha, descripción, mercado, tipo)
+- Botones para: Ingresar, Cargar CSV, Modificar, Eliminar
+- Panel lateral organizado en secciones (Filtros, Ingreso, Acciones)
+- Integra todos los componentes modales
 
-### Opción 2: Inicio Manual
+**`Perfil.jsx`**
+- Página de perfil del usuario autenticado
+- Muestra datos del usuario obtenidos de `/api/auth/profile/`
 
-#### Backend
+---
 
-1. **Activa el entorno virtual:**
-   ```bash
-   # Windows
-   cd Nuam_Backend
-   Ambiente\Scripts\activate
-   
-   # Linux/Mac
-   cd Nuam_Backend
-   source Ambiente/bin/activate
-   ```
+#### `src/components/` - Componentes Reutilizables
 
-2. **Inicia el servidor de desarrollo:**
-   ```bash
-   python manage.py runserver
-   ```
+**`Ingresar.jsx`**
+- Modal para ingresar datos básicos de una calificación
+- Campos: ejercicio, mercado, instrumento, fecha pago, secuencia, etc.
+- Botones "+ Añadir nuevo" para crear mercados, ejercicios e instrumentos
+- Valida datos antes de avanzar a IngresarFactores o IngresarMontos
 
-   El backend estará disponible en: `http://localhost:8000`
+**`IngresarFactores.jsx`**
+- Modal para ingresar los 30 factores directamente (Factor_8 a Factor_37)
+- Valida que los factores sean números válidos (>= 0)
+- Envía datos al backend para crear la calificación
 
-#### Frontend
+**`IngresarMontos.jsx`**
+- Modal de dos pasos:
+  1. Ingresar montos (factores 8-19): valida que al menos uno sea > 0
+  2. Ver factores calculados automáticamente (del 8 al 37)
+- Permite modificar factores antes de guardar
+- Envía datos al backend para crear la calificación
 
-1. **Navega a la carpeta del frontend:**
-   ```bash
-   cd NUAM
-   ```
+**`ModificarCalificacion.jsx`**
+- Modal para modificar una calificación existente
+- Carga datos actuales y permite editarlos
+- Maneja actualización de factores
+- Valida antes de guardar
 
-2. **Inicia el servidor de desarrollo:**
-   ```bash
-   npm run dev
-   ```
+**`Modificar.jsx`**
+- Componente interno para modificar factores de una calificación
+- Similar a IngresarFactores pero para edición
 
-   El frontend estará disponible en: `http://localhost:5173` (o el puerto que Vite asigne)
+**`Cargar.jsx`**
+- Modal para carga masiva de CSV
+- Permite subir archivo CSV o ingresar datos manualmente
+- Muestra ejemplo de formato CSV
+- Normaliza datos y los envía al backend
+- Muestra resultados (exitosas, errores)
 
-## 🗄️ Configuración de Base de Datos
+**`EliminarConfirm.jsx`**
+- Modal de confirmación antes de eliminar una calificación
+- Pide confirmación explícita del usuario
 
-### SQLite (Por defecto)
+**`PrivateRoute.jsx`**
+- Componente wrapper para proteger rutas
+- Redirige a login si el usuario no está autenticado
+- Usa `AuthContext` para verificar autenticación
 
-El proyecto viene configurado para usar SQLite por defecto. No requiere configuración adicional.
+**`UserIcon.jsx`**
+- Componente de icono de usuario
+- Usado en el header de la aplicación
 
-### PostgreSQL (Producción)
+---
 
-Para usar PostgreSQL en producción:
+#### `src/services/` - Servicios API
 
-1. **Crea una base de datos en PostgreSQL:**
-   ```sql
-   CREATE DATABASE nuam_db;
-   CREATE USER nuam_user WITH PASSWORD 'tu_contraseña';
-   GRANT ALL PRIVILEGES ON DATABASE nuam_db TO nuam_user;
-   ```
+**`authService.js`**
+- `login()`: Inicia sesión y guarda tokens en localStorage
+- `refreshAccessToken()`: Refresca el token de acceso
+- `logout()`: Elimina tokens del localStorage
+- `requestPasswordReset()`: Solicita código de recuperación
+- `validatePasswordResetCode()`: Valida código (paso 2)
+- `verifyPasswordReset()`: Cambia contraseña (paso 3)
+- `getAuthHeaders()`: Retorna headers con token para peticiones
 
-2. **Actualiza la configuración en `Nuam_Backend/Nuam_Backend/settings.py`:**
-   ```python
-   DATABASES = {
-       'default': {
-           'ENGINE': 'django.db.backends.postgresql',
-           'NAME': 'nuam_db',
-           'USER': 'nuam_user',
-           'PASSWORD': 'tu_contraseña',
-           'HOST': 'localhost',
-           'PORT': '5432',
-       }
-   }
-   ```
+**`calificacionesService.js`**
+- `getCalificaciones()`: Obtiene todas las calificaciones del usuario
+- `getCalificacion(id)`: Obtiene una calificación por ID
+- `createCalificacion()`: Crea una nueva calificación
+- `updateCalificacion(id, data)`: Actualiza una calificación
+- `deleteCalificacion(id)`: Elimina una calificación
+- `cargarCSV()`: Carga masiva desde CSV
+- `getMercados()`, `getEjercicios()`, `getInstrumentos()`, `getTiposAgregacion()`: Obtienen catálogos
+- `createMercado()`, `createEjercicio()`, `createInstrumento()`: Crean elementos en catálogos
 
-3. **Realiza las migraciones:**
-   ```bash
-   python manage.py migrate
-   ```
+---
 
-**Nota:** Se recomienda usar un usuario de PostgreSQL sin caracteres especiales (como acentos) para evitar problemas de codificación en Windows.
+#### `src/context/AuthContext.jsx`
+- Context API de React para manejar estado de autenticación global
+- Proporciona: `user`, `login()`, `logout()`, `isAuthenticated`
+- Decodifica JWT para obtener datos del usuario
+- Maneja refresh automático de tokens
 
-## 🔐 Autenticación y Seguridad
+---
 
-### Sistema de Autenticación
+#### `src/config/api.js`
+- Configuración centralizada de todos los endpoints de la API
+- Define `API_BASE_URL` (por defecto http://localhost:8000)
+- Objeto `API_ENDPOINTS` con todas las URLs organizadas por módulo
+- Permite cambiar URL base mediante variable de entorno `VITE_API_BASE_URL`
 
-El sistema utiliza autenticación basada en JWT (JSON Web Tokens):
+---
 
-- **Token de acceso**: Válido por 60 minutos
-- **Token de refresco**: Válido por 7 días
-- **Almacenamiento**: LocalStorage en el navegador
+#### `src/routes/AppRouter.jsx`
+- Configuración de rutas de la aplicación
+- Define rutas públicas y privadas
+- Usa `PrivateRoute` para proteger rutas que requieren autenticación
 
-### Endpoints de Autenticación
+---
 
-- `POST /api/auth/token/` - Iniciar sesión
-- `POST /api/auth/token/refresh/` - Refrescar token
-- `POST /api/auth/token/verify/` - Verificar token
+#### `src/App.jsx`
+- Componente raíz de la aplicación
+- Envuelve la app con `AuthProvider` para tener acceso al contexto de autenticación
+- Define el router principal
 
-### Roles del Sistema
+#### `src/main.jsx`
+- Punto de entrada de la aplicación React
+- Renderiza el componente `App` en el DOM
+- Importa estilos globales
 
-- **Administrador**: Acceso completo al sistema y panel administrativo de Django
-- **Usuario**: Acceso a las funcionalidades de gestión de calificaciones
+---
 
-Los usuarios con rol "Administrador" tienen automáticamente `is_staff=True`, lo que les permite acceder al panel administrativo de Django.
+#### Archivos de Configuración
 
-## 📝 Modelos de Datos
+**`package.json`**
+- Define dependencias del proyecto (React, Vite, Tailwind, etc.)
+- Scripts: `dev` (desarrollo), `build` (producción), `preview` (preview del build)
 
-### Core (Usuarios)
+**`vite.config.js`**
+- Configuración de Vite (build tool)
+- Define puerto, proxy, y opciones de desarrollo
 
-- **Usuario**: Extiende AbstractUser de Django, incluye relación con Rol y Empleado
-- **Empleado**: Información de empleados (RUT)
-- **Rol**: Roles del sistema (Administrador, Usuario, etc.)
+**`eslint.config.js`**
+- Configuración de ESLint para validar código JavaScript
 
-### Calificaciones
+---
 
-- **Calificacion**: Calificaciones tributarias con todos sus campos
-- **Factor**: Factores de actualización (Factor_8 a Factor_37)
-- **Instrumento**: Instrumentos financieros
-- **Mercado**: Mercados financieros
-- **Ejercicio**: Ejercicios contables
-- **TipoAgregacion**: Tipos de agregación (MANUAL (FACTORES), MANUAL (MONTO))
+## 🌐 URLs del Sistema
 
-## 🌐 API Endpoints
+Cuando ambos servidores estén corriendo:
+
+- **Frontend (Aplicación)**: http://localhost:5173
+- **Backend (API)**: http://localhost:8000
+- **Admin de Django**: http://localhost:8000/admin
+
+---
+
+## 🌐 Endpoints de la API
 
 ### Autenticación
-- `POST /api/auth/token/` - Obtener tokens JWT
-- `POST /api/auth/token/refresh/` - Refrescar token de acceso
-- `POST /api/auth/token/verify/` - Verificar token
-- `GET /api/auth/admin-login-token/` - Obtener token para acceso al admin
+- `POST /api/auth/token/` - Login (retorna JWT)
+- `POST /api/auth/token/refresh/` - Refrescar token
+- `POST /api/auth/password-reset/request/` - Solicitar código recuperación
+- `POST /api/auth/password-reset/validate/` - Validar código
+- `POST /api/auth/password-reset/verify/` - Cambiar contraseña
+- `GET /api/auth/profile/` - Obtener perfil del usuario
 
 ### Calificaciones
 - `GET /api/calificaciones/calificaciones/` - Listar calificaciones
@@ -368,193 +659,114 @@ Los usuarios con rol "Administrador" tienen automáticamente `is_staff=True`, lo
 - `GET /api/calificaciones/calificaciones/{id}/` - Obtener calificación
 - `PUT /api/calificaciones/calificaciones/{id}/` - Actualizar calificación
 - `DELETE /api/calificaciones/calificaciones/{id}/` - Eliminar calificación
+- `POST /api/calificaciones/calificaciones/cargar_csv/` - Carga masiva CSV
 
 ### Catálogos
-- `GET /api/calificaciones/mercados/` - Listar mercados
-- `GET /api/calificaciones/instrumentos/` - Listar instrumentos
-- `GET /api/calificaciones/ejercicios/` - Listar ejercicios
-- `GET /api/calificaciones/tipos-agregacion/` - Listar tipos de agregación
-
-### Dashboard Administrativo
-- `GET /admin/dashboard-stats/` - Estadísticas para el dashboard (requiere autenticación de staff)
-
-## 🛠️ Comandos Útiles
-
-### Backend
-
-```bash
-# Crear migraciones
-python manage.py makemigrations
-
-# Aplicar migraciones
-python manage.py migrate
-
-# Crear superusuario
-python manage.py createsuperuser
-
-# Ejecutar servidor de desarrollo
-python manage.py runserver
-
-# Ejecutar servidor en puerto específico
-python manage.py runserver 8000
-
-# Acceder al shell de Django
-python manage.py shell
-
-# Recopilar archivos estáticos
-python manage.py collectstatic
-```
-
-### Frontend
-
-```bash
-# Instalar dependencias
-npm install
-
-# Servidor de desarrollo
-npm run dev
-
-# Build para producción
-npm run build
-
-# Preview del build de producción
-npm run preview
-
-# Ejecutar linter
-npm run lint
-```
-
-## 📊 Funcionalidades del Sistema
-
-### Gestión de Calificaciones
-
-- **Ingreso por Factores**: Ingreso directo de los 30 factores (Factor_8 a Factor_37)
-- **Ingreso por Montos**: Ingreso de montos que se calculan automáticamente a factores
-- **Carga Masiva**: Carga de calificaciones mediante archivos CSV
-- **Modificación**: Edición de calificaciones existentes
-- **Eliminación**: Eliminación de calificaciones con confirmación
-
-### Dashboard Administrativo
-
-- **Estadísticas**: Métricas clave del sistema
-- **Gráficos**: Visualización de datos mediante Chart.js
-  - Calificaciones por mes
-  - Distribución por tipo de agregación
-  - Calificaciones por mercado
-  - Calificaciones por año
-- **Tabla de calificaciones recientes**: Últimas calificaciones ingresadas
-
-### Filtros y Búsqueda
-
-- Filtrado por ejercicio
-- Filtrado por instrumento
-- Filtrado por fecha de pago
-- Filtrado por descripción
-- Filtrado por mercado
-- Filtrado por tipo de agregación
-- Filtrado por secuencia de evento
-
-## 🔒 Variables de Entorno
-
-Para producción, se recomienda usar variables de entorno. Crea un archivo `.env` en `Nuam_Backend/`:
-
-```env
-SECRET_KEY=tu_secret_key_aqui
-DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,tu-dominio.com
-DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/nuam_db
-```
-
-Luego, en `settings.py`, usa `python-decouple` o `django-environ` para cargar las variables.
-
-## 🧪 Testing
-
-### Backend
-
-```bash
-# Ejecutar tests
-python manage.py test
-
-# Ejecutar tests de una app específica
-python manage.py test core
-python manage.py test calificaciones
-```
-
-### Frontend
-
-```bash
-# Ejecutar tests (si están configurados)
-npm test
-```
-
-## 📦 Despliegue
-
-### Backend (Django)
-
-1. **Configura las variables de entorno de producción**
-2. **Configura una base de datos PostgreSQL**
-3. **Recopila los archivos estáticos:**
-   ```bash
-   python manage.py collectstatic
-   ```
-4. **Configura un servidor web (Nginx + Gunicorn)**
-5. **Configura SSL/HTTPS**
-
-### Frontend (React)
-
-1. **Construye la aplicación:**
-   ```bash
-   npm run build
-   ```
-2. **Sirve los archivos estáticos con un servidor web (Nginx, Apache)**
-3. **Configura las variables de entorno para la API**
-
-## 🐛 Solución de Problemas
-
-### Error: "ModuleNotFoundError"
-
-**Solución**: Asegúrate de tener el entorno virtual activado y las dependencias instaladas:
-```bash
-pip install -r requirements.txt
-```
-
-### Error: "Port already in use"
-
-**Solución**: Cambia el puerto del servidor:
-```bash
-# Backend
-python manage.py runserver 8001
-
-# Frontend (en vite.config.js)
-server: {
-  port: 5174
-}
-```
-
-### Error: "CORS policy"
-
-**Solución**: Verifica que `django-cors-headers` esté instalado y configurado en `settings.py`.
-
-### Error: "Token expired"
-
-**Solución**: El token JWT expira después de 60 minutos. El sistema debería refrescar automáticamente, pero si no, cierra sesión e inicia sesión nuevamente.
-
-## 📄 Licencia
-
-Este proyecto es parte de un Proyecto Integrado académico desarrollado para INACAP.
-
-## 👥 Autores
-
-- **Duarte Benjamin**
-- **Medina Cristobal**
-- **Villalobos Patricio**
-
-## 📞 Soporte
-
-Para problemas o preguntas relacionadas con el proyecto, contacta al equipo de desarrollo.
+- `GET/POST /api/calificaciones/mercados/` - Gestión de mercados
+- `GET/POST /api/calificaciones/instrumentos/` - Gestión de instrumentos
+- `GET/POST /api/calificaciones/ejercicios/` - Gestión de ejercicios
+- `GET/POST /api/calificaciones/tipos-agregacion/` - Gestión de tipos
 
 ---
 
+## 🐛 Solución de Problemas
+
+### Error: "python no se reconoce como comando" (Windows)
+
+**Solución:** Python no está en el PATH.
+1. Reinstala Python desde https://www.python.org/downloads/
+2. **IMPORTANTE:** Marca la casilla "Add Python to PATH" durante la instalación
+3. Reinicia la terminal
+
+### Error: "ModuleNotFoundError" o "No module named X"
+
+**Solución:** Las dependencias no están instaladas o el entorno virtual no está activado.
+1. Asegúrate de estar en la carpeta `Nuam_Backend`
+2. Activa el entorno virtual:
+   - Windows: `Ambiente\Scripts\activate`
+   - Linux/Mac: `source Ambiente/bin/activate`
+3. Instala las dependencias: `pip install -r requirements.txt`
+
+### Error: "Port 8000 already in use" (Backend)
+
+**Solución:** El puerto 8000 está siendo usado.
+1. Busca qué proceso está usando el puerto y ciérralo, o
+2. Usa otro puerto: `python manage.py runserver 8001`
+3. Si cambias el puerto, actualiza la URL del backend en `NUAM/src/config/api.js`
+
+### Error: "Port 5173 already in use" (Frontend)
+
+**Solución:** El puerto 5173 está siendo usado.
+1. Vite automáticamente usará el puerto 5174, 5175, etc.
+2. Sigue las instrucciones en la terminal para la nueva URL
+
+### Error: "npm no se reconoce como comando" (Windows)
+
+**Solución:** Node.js no está instalado o no está en el PATH.
+1. Instala Node.js desde https://nodejs.org/ (versión LTS)
+2. Reinicia la terminal después de instalar
+3. Verifica: `node --version` y `npm --version`
+
+### Error: "CORS policy" en el navegador
+
+**Solución:** El backend no está corriendo o hay un problema de CORS.
+1. Verifica que el backend esté corriendo en http://localhost:8000
+2. Verifica que `django-cors-headers` esté instalado: `pip list | findstr cors`
+3. Si no está, instálalo: `pip install django-cors-headers`
+
+### El entorno virtual no se activa
+
+**Windows:**
+```bash
+# Si obtienes un error de permisos, ejecuta:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+Luego intenta activar de nuevo: `Ambiente\Scripts\activate`
+
+**Linux/Mac:**
+```bash
+# Si obtienes "Permission denied":
+chmod +x Ambiente/bin/activate
+source Ambiente/bin/activate
+```
+
+---
+
+## 🔐 Primer Uso
+
+1. Abre la aplicación en http://localhost:5173
+2. Necesitas un usuario para iniciar sesión
+3. Si no tienes un usuario:
+   - Ve a http://localhost:8000/admin
+   - Inicia sesión con el superusuario que creaste (o crea uno si no lo hiciste)
+   - Crea un usuario desde el panel de administración
+
+---
+
+## 📊 Funcionalidades
+
+- ✅ Autenticación con JWT
+- ✅ Roles (Administrador, Usuario)
+- ✅ CRUD completo de calificaciones
+- ✅ Ingreso por factores o montos
+- ✅ Carga masiva CSV
+- ✅ Filtros avanzados
+- ✅ Dashboard administrativo
+- ✅ Recuperación de contraseña por email
+
+---
+
+## 👥 Autores
+
+- Duarte Benjamin
+- Medina Cristobal
+- Villalobos Patricio
+
+---
+
+## 📄 Licencia
+
+Proyecto Integrado académico desarrollado para INACAP.
+
 **Versión**: 1.0.0  
-**Última actualización**: 2025  
-**Estado**: En producción
+**Última actualización**: 2025

@@ -30,18 +30,26 @@ export default function IngresarFactores({ onClose, onSubmit, datosIniciales = {
   };
 
   const validateFactores = () => {
-    const factoresInvalidos = Object.entries(formData.factores).filter(
-      ([key, value]) => {
-        if (value === "" || value === null || value === undefined) {
-          return true;
-        }
-        const numValue = parseFloat(value);
-        return isNaN(numValue) || numValue < 0;
+    // Todos los factores pueden ser 0, solo validar que sean números válidos (>= 0)
+    const factoresInvalidos = [];
+    for (let i = 8; i <= 37; i++) {
+      const factorKey = `factor${i}`;
+      const valor = formData.factores[factorKey];
+      
+      if (valor === "" || valor === null || valor === undefined) {
+        factoresInvalidos.push(`Factor ${i} está vacío`);
+        continue;
       }
-    );
+      
+      const numValue = parseFloat(valor);
+      if (isNaN(numValue) || numValue < 0) {
+        factoresInvalidos.push(`Factor ${i} tiene un valor inválido (debe ser >= 0)`);
+        continue;
+      }
+    }
     
     if (factoresInvalidos.length > 0) {
-      setError("Todos los factores deben tener un valor válido (pueden ser 0)");
+      setError(`Errores en los factores: ${factoresInvalidos.join(", ")}`);
       return false;
     }
     setError("");

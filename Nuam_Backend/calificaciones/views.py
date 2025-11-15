@@ -52,8 +52,11 @@ class CalificacionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def cargar_csv(self, request):
         """
-        Endpoint para cargar múltiples calificaciones desde CSV.
-        Recibe un array de objetos con datos normalizados del CSV.
+        Endpoint: POST /api/calificaciones/calificaciones/cargar_csv/
+        Frontend: NUAM/src/services/calificacionesService.js - método cargarCSV()
+        Recibe: { datos: [{ ejercicio, mercado, instrumento, fechaPago, factores... }, ...] }
+        Retorna: { exitosas: [...], errores: [...], total: X, creadas: Y, fallidas: Z }
+        Siempre asigna tipo_agregacion="MASIVA" para cargas masivas
         """
         datos_csv = request.data.get('datos', [])
         

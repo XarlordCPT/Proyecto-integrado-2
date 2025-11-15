@@ -26,6 +26,12 @@ export default function Ingresar({ onClose, onMontos, onFactores }) {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showModalNuevo, setShowModalNuevo] = useState({
+    tipo: null, // 'mercado', 'ejercicio', 'instrumento'
+    abierto: false,
+  });
+  const [nuevoValor, setNuevoValor] = useState("");
+  const [creando, setCreando] = useState(false);
 
   useEffect(() => {
     const loadOpciones = async () => {
@@ -211,6 +217,79 @@ export default function Ingresar({ onClose, onMontos, onFactores }) {
     onFactores(registro);
   };
 
+  const abrirModalNuevo = (tipo) => {
+    // Para instrumento, necesitamos que primero se haya seleccionado un mercado
+    if (tipo === 'instrumento' && !registro.mercado_id) {
+      setError("Debes seleccionar un mercado antes de añadir un instrumento");
+      return;
+    }
+    setShowModalNuevo({ tipo, abierto: true });
+    setNuevoValor("");
+    setError("");
+  };
+
+  const cerrarModalNuevo = () => {
+    setShowModalNuevo({ tipo: null, abierto: false });
+    setNuevoValor("");
+    setError("");
+  };
+
+  const handleCrearNuevo = async () => {
+    if (!nuevoValor.trim()) {
+      setError(`Debes ingresar un ${showModalNuevo.tipo === 'mercado' ? 'mercado' : showModalNuevo.tipo === 'ejercicio' ? 'ejercicio' : 'instrumento'}`);
+      return;
+    }
+
+    setCreando(true);
+    setError("");
+
+    try {
+      let nuevoElemento;
+
+      switch (showModalNuevo.tipo) {
+        case 'mercado':
+          nuevoElemento = await calificacionesService.createMercado(nuevoValor.trim());
+          // Actualizar lista de mercados
+          const mercadosActualizados = await calificacionesService.getMercados();
+          setOpciones(prev => ({ ...prev, mercados: mercadosActualizados }));
+          // Seleccionar el nuevo mercado
+          setRegistro(prev => ({ ...prev, mercado_id: nuevoElemento.id_mercado.toString() }));
+          break;
+
+        case 'ejercicio':
+          nuevoElemento = await calificacionesService.createEjercicio(nuevoValor.trim());
+          // Actualizar lista de ejercicios
+          const ejerciciosActualizados = await calificacionesService.getEjercicios();
+          setOpciones(prev => ({ ...prev, ejercicios: ejerciciosActualizados }));
+          // Seleccionar el nuevo ejercicio
+          setRegistro(prev => ({ ...prev, ejercicio_id: nuevoElemento.id_ejercicio.toString() }));
+          break;
+
+        case 'instrumento':
+          nuevoElemento = await calificacionesService.createInstrumento(
+            nuevoValor.trim(),
+            parseInt(registro.mercado_id)
+          );
+          // Actualizar lista de instrumentos
+          const instrumentosActualizados = await calificacionesService.getInstrumentos();
+          setOpciones(prev => ({ ...prev, instrumentos: instrumentosActualizados }));
+          // Seleccionar el nuevo instrumento
+          setRegistro(prev => ({ ...prev, instrumento_id: nuevoElemento.id_instrumento.toString() }));
+          break;
+
+        default:
+          throw new Error("Tipo de elemento no válido");
+      }
+
+      cerrarModalNuevo();
+    } catch (err) {
+      console.error("Error al crear nuevo elemento:", err);
+      setError(err.message || "Error al crear el elemento. Puede que ya exista.");
+    } finally {
+      setCreando(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
       <div className="bg-[#F4F4F4] border border-gray-300 rounded-md shadow-lg w-[850px] max-h-[90vh] overflow-y-auto relative">
@@ -268,7 +347,16 @@ export default function Ingresar({ onClose, onMontos, onFactores }) {
                 </div>
 
                 <div>
-                  <label className="font-medium">Ejercicio: *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-medium">Ejercicio: *</label>
+                    <button
+                      type="button"
+                      onClick={() => abrirModalNuevo('ejercicio')}
+                      className="text-xs text-[var(--nar)] hover:underline"
+                    >
+                      + Añadir nuevo
+                    </button>
+                  </div>
                   <select
                     name="ejercicio_id"
                     value={registro.ejercicio_id}
@@ -286,7 +374,16 @@ export default function Ingresar({ onClose, onMontos, onFactores }) {
                 </div>
 
                 <div>
-                  <label className="font-medium">Mercado: *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-medium">Mercado: *</label>
+                    <button
+                      type="button"
+                      onClick={() => abrirModalNuevo('mercado')}
+                      className="text-xs text-[var(--nar)] hover:underline"
+                    >
+                      + Añadir nuevo
+                    </button>
+                  </div>
                   <select
                     name="mercado_id"
                     value={registro.mercado_id}
@@ -304,7 +401,17 @@ export default function Ingresar({ onClose, onMontos, onFactores }) {
                 </div>
 
                 <div>
-                  <label className="font-medium">Instrumento: *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-medium">Instrumento: *</label>
+                    <button
+                      type="button"
+                      onClick={() => abrirModalNuevo('instrumento')}
+                      className="text-xs text-[var(--nar)] hover:underline"
+                      disabled={!registro.mercado_id}
+                    >
+                      + Añadir nuevo
+                    </button>
+                  </div>
                   <select
                     name="instrumento_id"
                     value={registro.instrumento_id}
@@ -465,6 +572,69 @@ export default function Ingresar({ onClose, onMontos, onFactores }) {
           </div>
         </form>
       </div>
+
+      {/* Modal para añadir nuevo elemento */}
+      {showModalNuevo.abierto && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+          <div className="bg-[#F4F4F4] border border-gray-300 rounded-md shadow-lg w-96">
+            <div className="border-b border-gray-300 bg-white px-5 py-2">
+              <h3 className="text-[var(--nar)] font-bold text-[16.5px]">
+                Añadir nuevo {showModalNuevo.tipo === 'mercado' ? 'Mercado' : showModalNuevo.tipo === 'ejercicio' ? 'Ejercicio' : 'Instrumento'}
+              </h3>
+            </div>
+            <div className="p-5 space-y-4">
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
+                  {error}
+                </div>
+              )}
+              <div>
+                <label className="font-medium text-[15px]">
+                  Nombre {showModalNuevo.tipo === 'mercado' ? 'del mercado' : showModalNuevo.tipo === 'ejercicio' ? 'del ejercicio' : 'del instrumento'}: *
+                </label>
+                <input
+                  type="text"
+                  value={nuevoValor}
+                  onChange={(e) => setNuevoValor(e.target.value)}
+                  className="w-full border border-gray-400 rounded px-2 py-1 mt-1"
+                  placeholder={`Ingresa el nombre...`}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCrearNuevo();
+                    } else if (e.key === 'Escape') {
+                      cerrarModalNuevo();
+                    }
+                  }}
+                />
+                {showModalNuevo.tipo === 'instrumento' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Se asociará al mercado: {opciones.mercados.find(m => m.id_mercado.toString() === registro.mercado_id)?.nombre_mercado || 'N/A'}
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={cerrarModalNuevo}
+                  className="border border-gray-400 px-4 py-1.5 rounded hover:bg-gray-100 transition-all"
+                  disabled={creando}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCrearNuevo}
+                  className="bg-[var(--nar)] text-white font-semibold px-4 py-1.5 rounded hover:opacity-90 transition-all"
+                  disabled={creando || !nuevoValor.trim()}
+                >
+                  {creando ? 'Creando...' : 'Crear'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

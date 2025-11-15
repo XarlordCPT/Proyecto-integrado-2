@@ -2,7 +2,9 @@ import { API_ENDPOINTS } from '../config/api';
 import authService from './authService';
 
 /**
- * Servicio para manejar las calificaciones con el backend
+ * Servicio de calificaciones - Conecta frontend con backend Django
+ * Backend: Nuam_Backend/calificaciones/views.py - CalificacionViewSet
+ * URLs: Nuam_Backend/calificaciones/urls.py
  */
 class CalificacionesService {
   /**
@@ -274,6 +276,112 @@ class CalificacionesService {
       return await response.json();
     } catch (error) {
       console.error('Error en cargarCSV:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea un nuevo mercado
+   * @param {string} nombre_mercado - Nombre del mercado
+   * @returns {Promise<Object>}
+   */
+  async createMercado(nombre_mercado) {
+    try {
+      const response = await fetch(API_ENDPOINTS.CALIFICACIONES.MERCADOS, {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({ nombre_mercado }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.nombre_mercado?.[0] || errorData.detail || 'Error al crear mercado');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en createMercado:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea un nuevo ejercicio
+   * @param {string} nombre_ejercicio - Nombre del ejercicio
+   * @returns {Promise<Object>}
+   */
+  async createEjercicio(nombre_ejercicio) {
+    try {
+      const response = await fetch(API_ENDPOINTS.CALIFICACIONES.EJERCICIOS, {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({ nombre_ejercicio }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.nombre_ejercicio?.[0] || errorData.detail || 'Error al crear ejercicio');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en createEjercicio:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea un nuevo tipo de agregación
+   * @param {string} nombre_agregacion - Nombre del tipo de agregación
+   * @returns {Promise<Object>}
+   */
+  async createTipoAgregacion(nombre_agregacion) {
+    try {
+      const response = await fetch(API_ENDPOINTS.CALIFICACIONES.TIPOS_AGREGACION, {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({ nombre_agregacion }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.nombre_agregacion?.[0] || errorData.detail || 'Error al crear tipo de agregación');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en createTipoAgregacion:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea un nuevo instrumento
+   * @param {string} nombre_instrumento - Nombre del instrumento
+   * @param {number} mercado_id - ID del mercado
+   * @returns {Promise<Object>}
+   */
+  async createInstrumento(nombre_instrumento, mercado_id) {
+    try {
+      const response = await fetch(API_ENDPOINTS.CALIFICACIONES.INSTRUMENTOS, {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({ nombre_instrumento, mercado: mercado_id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.nombre_instrumento?.[0] || 
+          errorData.mercado?.[0] || 
+          errorData.detail || 
+          'Error al crear instrumento'
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en createInstrumento:', error);
       throw error;
     }
   }

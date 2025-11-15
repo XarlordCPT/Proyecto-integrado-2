@@ -45,20 +45,35 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
   };
 
   const validateMontos = () => {
-    const montosObligatorios = [];
+    // Validar que al menos 1 monto del 8 al 19 sea > 0
+    let tieneAlMenosUnoMayorA0 = false;
+    const montosInvalidos = [];
+    
     for (let i = 8; i <= 19; i++) {
       const montoKey = `monto${i}`;
       const montoValue = formData.montos[montoKey];
-      if (!montoValue || montoValue === "" || parseFloat(montoValue) <= 0) {
-        montosObligatorios.push(i);
+      const numValue = parseFloat(montoValue || 0);
+      
+      if (montoValue !== "" && numValue > 0) {
+        tieneAlMenosUnoMayorA0 = true;
+      }
+      
+      if (montoValue && montoValue !== "" && numValue < 0) {
+        montosInvalidos.push(`Factor ${i} no puede ser negativo`);
       }
     }
     
-    if (montosObligatorios.length > 0) {
-      setError(`Los montos del Factor 8 al Factor 19 son obligatorios y deben ser mayor a 0. Faltan: ${montosObligatorios.join(", ")}`);
+    if (!tieneAlMenosUnoMayorA0) {
+      setError("Al menos un monto del Factor 8 al Factor 19 debe ser mayor a 0");
       return false;
     }
 
+    if (montosInvalidos.length > 0) {
+      setError(`Errores: ${montosInvalidos.join(", ")}`);
+      return false;
+    }
+
+    // Validar montos del 20 al 37 (opcionales, pero no pueden ser negativos)
     for (let i = 20; i <= 37; i++) {
       const montoKey = `monto${i}`;
       const montoValue = formData.montos[montoKey];
@@ -68,6 +83,7 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
       }
     }
 
+    // Validar suma de denominador
     let sumaDenominador = 0;
     for (let i = 8; i <= 19; i++) {
       const montoKey = `monto${i}`;
@@ -76,7 +92,7 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
     }
 
     if (sumaDenominador === 0) {
-      setError("La suma de los montos del Factor 8 al Factor 19 no puede ser 0");
+      setError("La suma de los montos del Factor 8 al Factor 19 debe ser mayor a 0");
       return false;
     }
 
@@ -120,6 +136,7 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
   };
 
   const validateFactores = () => {
+    // Todos los factores pueden ser 0, solo validar que sean números válidos (>= 0)
     const factoresInvalidos = [];
     for (let i = 8; i <= 37; i++) {
       const factorKey = `factor${i}`;
@@ -132,12 +149,8 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
       
       const numValue = parseFloat(valor);
       if (isNaN(numValue) || numValue < 0) {
-        factoresInvalidos.push(`Factor ${i} tiene un valor inválido`);
+        factoresInvalidos.push(`Factor ${i} tiene un valor inválido (debe ser >= 0)`);
         continue;
-      }
-      
-      if (i >= 8 && i <= 19 && numValue === 0) {
-        factoresInvalidos.push(`Factor ${i} no puede ser 0 (el monto correspondiente es obligatorio)`);
       }
     }
     
@@ -210,7 +223,7 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
                   <br />
                   <strong>Factor_N = Monto_N / (Monto_8 + Monto_9 + ... + Monto_19)</strong>
                   <br />
-                  <span className="text-red-600 font-semibold">Nota: Los montos del Factor 8 al 19 son obligatorios y deben ser mayor a 0. Los montos del Factor 20 al 37 son opcionales.</span>
+                  <span className="text-red-600 font-semibold">Nota: Al menos un monto del Factor 8 al 19 debe ser mayor a 0. Los montos del Factor 20 al 37 son opcionales.</span>
                 </p>
                 <div className="grid grid-cols-6 gap-2">
                   {Object.keys(formData.montos).map((key, i) => {
@@ -223,14 +236,13 @@ export default function IngresarMontos({ onClose, onSubmit, datosIniciales = {} 
                         <input
                           type="number"
                           step="0.01"
-                          min={esObligatorio ? "0.01" : "0"}
+                          min="0"
                           value={formData.montos[key]}
                           onChange={(e) => handleMontoChange(e, key)}
                           className={`border border-gray-300 rounded px-1 py-1 bg-white text-sm ${
-                            esObligatorio ? "border-red-300" : ""
+                            esObligatorio ? "border-orange-300" : ""
                           }`}
-                          required={esObligatorio}
-                          placeholder={esObligatorio ? "Obligatorio" : "Opcional"}
+                          placeholder={esObligatorio ? "Al menos 1 > 0" : "Opcional"}
                         />
                       </label>
                     );

@@ -18,10 +18,21 @@ class EjercicioSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class InstrumentoSerializer(serializers.ModelSerializer):
-    mercado = serializers.StringRelatedField()
+    mercado_nombre = serializers.StringRelatedField(source='mercado', read_only=True)
+    mercado = serializers.PrimaryKeyRelatedField(queryset=Mercado.objects.all())
+    
     class Meta:
         model = Instrumento
-        fields = ['id_instrumento', 'nombre_instrumento', 'mercado']
+        fields = ['id_instrumento', 'nombre_instrumento', 'mercado', 'mercado_nombre']
+        
+    def to_representation(self, instance):
+        """Personalizar la representación para mantener compatibilidad"""
+        representation = super().to_representation(instance)
+        # Mantener 'mercado' como nombre para compatibilidad con el frontend existente
+        # pero solo si mercado_nombre existe (para lectura)
+        if 'mercado_nombre' in representation:
+            representation['mercado'] = representation.pop('mercado_nombre')
+        return representation
 
 class FactorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,12 +42,15 @@ class FactorSerializer(serializers.ModelSerializer):
 class CalificacionSerializer(serializers.ModelSerializer):
     factores = FactorSerializer(many=True)
 
-    usuario = serializers.StringRelatedField(read_only=True) #Estos 4 son solo para visualizarlos en caso de solicitud en la tabla
+    # Campos de solo lectura: Frontend los recibe al hacer GET
+    # Se usan en NUAM/src/pages/Mantenedor.jsx para mostrar datos en la tabla
+    usuario = serializers.StringRelatedField(read_only=True)
     tipo_agregacion_info = serializers.StringRelatedField(source='tipo_agregacion', read_only=True)
     ejercicio_info = serializers.StringRelatedField(source='ejercicio', read_only=True)
     instrumento_info = InstrumentoSerializer(source='instrumento', read_only=True) 
 
-    #Y estos para cuando se deban crear calificaciones
+    # Campos de escritura: Frontend envía IDs al hacer POST/PUT
+    # Frontend envía estos campos cuando crea/modifica calificaciones
     tipo_agregacion = serializers.PrimaryKeyRelatedField(queryset=TipoAgregacion.objects.all(), write_only=True) 
     ejercicio = serializers.PrimaryKeyRelatedField(queryset=Ejercicio.objects.all(), write_only=True)
     instrumento = serializers.PrimaryKeyRelatedField(queryset=Instrumento.objects.all(), write_only=True)
