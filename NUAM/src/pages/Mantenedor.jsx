@@ -12,6 +12,7 @@ import IngresarMontos from "../components/IngresarMontos";
 import IngresarFactores from "../components/IngresarFactores";
 import ModificarCalificacion from "../components/ModificarCalificacion";
 import Cargar from "../components/Cargar";
+import CerrarSesionConfirm from "../components/CerrarSesionConfirm";
 
 export default function Mantenedor() {
   const [data, setData] = useState([]);
@@ -35,6 +36,7 @@ export default function Mantenedor() {
   const [showModalModificar, setShowModalModificar] = useState(false);
   const [showModalCarga, setShowModalCarga] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showConfirmLogout, setShowConfirmLogout] = useState(false);
   const [isOpeningAdmin, setIsOpeningAdmin] = useState(false);
 
   const { logout, user } = useAuth();
@@ -245,6 +247,10 @@ export default function Mantenedor() {
   };
 
   const handleLogout = () => {
+    setShowConfirmLogout(true);
+  };
+
+  const confirmarLogout = () => {
     logout();
     navigate("/login");
   };
@@ -781,6 +787,13 @@ export default function Mantenedor() {
             </div>
           </div>
         </div>
+      )}
+
+      {showConfirmLogout && (
+        <CerrarSesionConfirm
+          onConfirm={confirmarLogout}
+          onCancel={() => setShowConfirmLogout(false)}
+        />
       )}
     </div>
   );
