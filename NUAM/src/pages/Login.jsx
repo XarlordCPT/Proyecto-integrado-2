@@ -157,6 +157,7 @@ export default function Login() {
                 <li>Duarte Benjamin</li>
                 <li>Medina Cristobal</li>
                 <li>Villalobos Patricio</li>
+                <li>Martinez Marina</li>
               </ul>
             </span>
           </div>

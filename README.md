@@ -867,6 +867,7 @@ source Ambiente/bin/activate
 - Duarte Benjamin
 - Medina Cristobal
 - Villalobos Patricio
+- Marina Martinez
 
 ---
 
