@@ -36,7 +36,9 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
-/static
+# Ignorar /static solo si está en la raíz, pero permitir static/admin/ en Nuam_Backend/
+# /static
+!Nuam_Backend/static/
 
 # IDEs
 .vscode/
