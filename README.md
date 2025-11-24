@@ -27,7 +27,36 @@ Si alguno no está instalado, descarga e instala desde los enlaces de arriba.
 
 ---
 
-## 🚀 Instalación Paso a Paso
+## ⚡ Instalación Automática
+
+Esta es la forma más rápida de instalar el proyecto.
+
+### ⚠️ Antes de comenzar
+1. **Asegúrate de tener Python y Node.js instalados** (ver sección Prerrequisitos).
+2. **Configura tu archivo .env**:
+   - Ve a la carpeta `Nuam_Backend`.
+   - Copia `.env.example` a un nuevo archivo llamado `.env`.
+   - Edita `.env` y coloca tus credenciales de base de datos (PostgreSQL) y tus credenciales de correo electrónico para envío de correos de recuperación de contraseña (Gmail).
+   - *Nota: Si no haces esto, el instalador creará el archivo por ti, pero las migraciones de base de datos fallarán hasta que pongas las credenciales correctas.*
+
+### Ejecutar el instalador
+
+#### Windows
+Simplemente haz doble clic en el archivo **`install_windows.bat`** o ejecútalo desde la terminal:
+```bash
+.\install_windows.bat
+```
+
+#### Linux / Mac
+Da permisos de ejecución y corre el script:
+```bash
+chmod +x install_linux.sh
+./install_linux.sh
+```
+
+---
+
+## 🛠️ Instalación Manual
 
 ### Windows
 
