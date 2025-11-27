@@ -5,7 +5,7 @@ Sistema web full-stack para la gestión integral de calificaciones tributarias. 
 ## Usuario de ejemplo
 
 Usuario: Nuamuser
-Contraseña: Nuamuser
+Contraseña: Contraseña123
 
 # Esto es un usuario de ejemplo para poder probar el sistema.
 
