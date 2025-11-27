@@ -80,7 +80,7 @@ if %errorlevel% neq 0 (
 )
 
 :: Desactivar venv y volver a raiz
-deactivate
+call deactivate
 cd ..
 echo.
 
@@ -89,7 +89,7 @@ echo [3/5] Configurando Frontend (React/Vite)...
 cd NUAM
 
 if not exist "node_modules" (
-    echo    - Instalando dependencias de Node (esto puede tardar)...
+    echo    - Instalando dependencias de Node
     call npm install
     if !errorlevel! neq 0 (
         echo [ERROR] Fallo al instalar dependencias de Node.

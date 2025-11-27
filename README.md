@@ -2,6 +2,13 @@
 
 Sistema web full-stack para la gestión integral de calificaciones tributarias. Permite administrar calificaciones financieras, instrumentos, factores de actualización, ejercicios contables y usuarios con roles diferenciados.
 
+## Usuario de ejemplo
+
+Usuario: Nuamuser
+Contraseña: Nuamuser
+
+# Esto es un usuario de ejemplo para poder probar el sistema.
+
 ## 📋 Prerrequisitos
 
 Antes de comenzar, necesitas tener instalado:
